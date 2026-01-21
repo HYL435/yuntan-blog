@@ -1,0 +1,63 @@
+# ==================== Maven 相关 ====================
+# 通用构建目录（核心忽略项）
+target/
+build/
+/dist/
+/nbdist/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven Wrapper（保留核心jar，忽略脚本和配置）
+.mvn/
+mvnw
+mvnw.cmd
+!.mvn/wrapper/maven-wrapper.jar
+
+# 例外规则：保留源码目录下的target/build（一般无需，可根据需求保留）
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ==================== 开发工具配置 ====================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
+out/
+
+# Eclipse/STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# ==================== 系统/语言相关 ====================
+# Kotlin
+.kotlin/
+
+# Mac OS
+.DS_Store
+
+# ==================== 项目无关文件 ====================
+HELP.md
