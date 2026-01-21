@@ -1,0 +1,50 @@
+server:
+  port: 9000  # 网关通常使用 9000 或 80 端口，避免与后端服务(8080)冲突
+
+spring:
+  application:
+    name: blog-gateway  # 服务名称，非常重要！这决定了 Nacos 寻找哪个配置文件
+
+  profiles:
+    active: dev  # 激活的环境：dev (开发), test (测试), prod (生产)
+
+  cloud:
+    nacos:
+      # Nacos 服务器地址 (如果是本地启动 Nacos，保持默认即可)
+      server-addr: 127.0.0.1:8848
+      username: nacos         # Nacos 登录用户名
+      password: 766498         # Nacos 登录密码
+
+      # ==========================================
+      # 1. Nacos 配置中心 (Config)
+      # ==========================================
+      config:
+        server-addr: ${spring.cloud.nacos.server-addr}
+        file-extension: yaml     # 指定配置文件后缀（必须与 Nacos 上的一致）
+        namespace: public        # 命名空间 ID (保留默认 public，生产环境建议用 UUID)
+        group: DEFAULT_GROUP     # 分组
+        refresh-enabled: true    # 开启配置自动刷新 (动态修改 Nacos 配置无需重启)
+        timeout: 5000            # 连接超时时间
+
+        # 【可选】共享配置：如果有所有微服务通用的配置（如 Redis、RabbitMQ）
+        # shared-configs:
+        #   - data-id: blog-common.yaml
+        #     group: DEFAULT_GROUP
+        #     refresh: true
+        username: ${spring.cloud.nacos.username}
+        password: ${spring.cloud.nacos.password}
+
+      # ==========================================
+      # 2. Nacos 服务注册与发现 (Discovery)
+      # ==========================================
+      discovery:
+        server-addr: ${spring.cloud.nacos.server-addr}
+        namespace: ${spring.cloud.nacos.config.namespace}
+        group: ${spring.cloud.nacos.config.group}
+        # 注册时的元数据（可选）
+        metadata:
+          version: v1.0
+
+  # 解决 Spring Boot 3.x 启动时可能的参数校验警告
+  main:
+    allow-bean-definition-overriding: true

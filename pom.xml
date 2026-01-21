@@ -17,6 +17,8 @@
     <!-- ================= 子模块 ================= -->
     <modules>
         <module>blog-user-service</module>
+        <module>blog-gateway</module>
+        <module>blog-common</module>
     </modules>
 
     <!-- ================= 统一属性 ================= -->
@@ -27,8 +29,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Spring 生态 -->
-        <spring.boot.version>4.0.1</spring.boot.version>
-        <spring.cloud.version>2025.1.0</spring.cloud.version>
+        <spring.boot.version>3.4.4</spring.boot.version>
+        <spring.cloud.version>2024.0.0</spring.cloud.version>
         <spring.cloud.alibaba.version>2025.0.0.0</spring.cloud.alibaba.version>
 
         <!-- 常用组件 -->
@@ -107,6 +109,20 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <!-- https://gitlab.xuxiaowei.com.cn/xuxiaowei-com-cn/spring-cloud-alibaba/-/packages -->
+        <repository>
+            <id>xuxiaowei-spring-cloud-alibaba-gitlab-maven</id>
+            <url>https://gitlab.xuxiaowei.com.cn/api/v4/projects/430/packages/maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <!-- ================= 构建插件版本管理 ================= -->
     <build>

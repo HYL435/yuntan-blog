@@ -14,8 +14,42 @@
     <name>blog-user-service</name>
     <description>用户服务模块</description>
 
+    <properties>
+        <java.version>21</java.version>
+        <!-- 明确Spring Cloud Alibaba版本（适配Spring Boot 3.5.9） -->
+        <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
+        <!-- 明确Spring Cloud版本 -->
+        <spring-cloud.version>2024.0.1</spring-cloud.version>
+        <!-- MyBatis Plus版本（适配Spring Boot 3.x） -->
+        <mybatis-plus.version>3.5.6</mybatis-plus.version>
+        <!-- Knife4j版本（适配Spring Boot 3.x） -->
+        <knife4j.version>4.3.0</knife4j.version>
+    </properties>
+
+    <!-- 依赖版本管理：统一管控，避免冲突 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Cloud 版本管理 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Spring Cloud Alibaba 版本管理 -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-        <!-- Spring Web核心 -->
+        <!-- Spring Web核心（自动引入autoconfigure，无需手动加） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -27,10 +61,11 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- MyBatis Plus -->
+        <!-- MyBatis Plus（指定适配版本） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>${mybatis-plus.version}</version>
         </dependency>
 
         <!-- MySQL 驱动 -->
@@ -47,20 +82,15 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Spring Boot热部署 -->
+        <!-- Spring Boot热部署（开发环境用，生产移除） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-            <version>4.0.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <!-- 1. 服务注册/发现（以Nacos为例，Spring Cloud Alibaba的组件） -->
+
+        <!-- 1. 服务注册/发现（Nacos） -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
@@ -72,7 +102,7 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
-        <!-- 3. 负载均衡（Spring Cloud自带） -->
+        <!-- 3. 负载均衡 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
@@ -83,18 +113,18 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
-        <!-- Knife4j 适配 Spring Boot 4.x + Jakarta EE -->
+
+        <!-- Knife4j 适配 Spring Boot 3.x + Jakarta EE（关键：降级到4.3.0） -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-            <!-- 4.4.0+ 版本完全适配 Spring Boot 4.x -->
-            <version>4.4.0</version>
+            <version>${knife4j.version}</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Spring Boot打包插件 -->
+            <!-- Spring Boot打包插件（继承父工程版本，无需手动指定） -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -105,9 +135,18 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <!-- 解决DevTools打包问题 -->
+                    <excludeDevtools>true</excludeDevtools>
                 </configuration>
+                <!-- 绑定repackage目标，确保打包为可执行JAR -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-
 </project>

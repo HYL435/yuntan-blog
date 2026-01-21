@@ -1,4 +1,4 @@
-package com.yuntan;
+package com.yuntan.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

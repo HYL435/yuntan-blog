@@ -1,0 +1,8 @@
+# JWT认证配置（极简版：仅登录认证，无角色鉴权）
+yuntan:
+  # JWT令牌核心配置
+  jwt:
+    location: classpath:yuntan.jks       # JKS密钥文件路径（resources目录下）
+    alias: yuntan                        # JKS密钥库别名
+    password: yuntan@766498              # JKS密钥库密码（生产环境用环境变量）
+    tokenTTL: 3h                         # 令牌有效期（3小时）
