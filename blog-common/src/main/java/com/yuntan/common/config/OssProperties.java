@@ -1,0 +1,15 @@
+package com.yuntan.common.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@ConfigurationProperties(prefix = "aliyun.oss")
+@Component
+@Data
+public class OssProperties {
+    private String endpoint;
+    private String bucketName;
+    private String accessKeyId;
+    private String accessKeySecret;
+}

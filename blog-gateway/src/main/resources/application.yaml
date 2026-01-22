@@ -1,8 +1,77 @@
+server:
+  port: 9000  # 网关通常使用 9000 或 80 端口，避免与后端服务(8080)冲突
+spring:
+  application:
+    name: blog-gateway
+  profiles:
+    active: dev  # 必须指定环境，否则无法解析下面的 active 变量
+
+  # =======================================================
+  # 【核心修改】Spring Boot 3 官方推荐配置导入方式
+  # =======================================================
+  config:
+    import:
+      # 语法格式：optional:nacos:DataID?group=GROUP&refresh=true
+      # 注意：必须显式指定要加载的文件名
+
+      # 1. 加载主应用配置 (对应 Nacos 中的 blog-gateway-dev.yaml)
+      - optional:nacos:${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+
+      # 2. (可选) 加载共享配置/公共配置 (对应 Nacos 中的 blog-common.yaml)
+      # 如果你有公共配置，请取消注释下面这行：
+      # - optional:nacos:blog-common.yaml?group=DEFAULT_GROUP&refresh=true
+
+  cloud:
+    nacos:
+      # Nacos 服务器全局地址
+      server-addr: 127.0.0.1:8848
+      username: nacos
+      password: 766498
+
+      # ---------------------------------------------------
+      # 1. Nacos Config (配置中心客户端设置)
+      # ---------------------------------------------------
+      config:
+        server-addr: ${spring.cloud.nacos.server-addr}
+        file-extension: yaml
+        namespace: public
+        group: DEFAULT_GROUP
+        # 认证信息
+        username: ${spring.cloud.nacos.username}
+        password: ${spring.cloud.nacos.password}
+        import:
+          # 1. 导入自身服务的配置 (blog-user-service-dev.yaml)
+          - optional:nacos:${spring.application.name}-${spring.profiles.active}.yaml
+          # 2. 导入公共配置 (shared-xxx.yaml)
+          - optional:nacos:shared-jdbc.yaml?group=DEFAULT_GROUP&refresh=true
+          - optional:nacos:shared-log.yaml?group=DEFAULT_GROUP&refresh=true
+          - optional:nacos:shared-swagger.yaml?group=DEFAULT_GROUP&refresh=true
+          - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
+
+      # ---------------------------------------------------
+      # 2. Nacos Discovery (注册中心)
+      # ---------------------------------------------------
+      discovery:
+        server-addr: ${spring.cloud.nacos.server-addr}
+        namespace: ${spring.cloud.nacos.config.namespace}
+        group: ${spring.cloud.nacos.config.group}
+        username: ${spring.cloud.nacos.username}
+        password: ${spring.cloud.nacos.password}
+        metadata:
+          version: v1.0
+
+  # 解决 Bean 覆盖问题
+  main:
+    allow-bean-definition-overriding: true
 # JWT认证配置（极简版：仅登录认证，无角色鉴权）
 yuntan:
-  # JWT令牌核心配置
   jwt:
-    location: classpath:yuntan.jks       # JKS密钥文件路径（resources目录下）
+    location: classpath:yuntan.jks       # JKS密钥文件路径
     alias: yuntan                        # JKS密钥库别名
-    password: yuntan@766498              # JKS密钥库密码（生产环境用环境变量）
-    tokenTTL: 3h                         # 令牌有效期（3小时）
+    password: 766498                     # 改为你指定的密码 766498
+    token-ttl: 10800000                  # 令牌有效期（3小时）
+    refresh-ttl: 604800000               # 刷新令牌有效期（7天）
+    issuer: yuntan-blog                  # JWT签发者
+    subject: blog-user-service           # JWT主题
+    header: Authorization                # JWT请求头名称
+    prefix: Bearer                       # JWT令牌前缀

@@ -1,5 +1,6 @@
 yuntan:
   db:
-    host: localhost
-    pw: 766498 # 修改为docker中的MySQL密码
-    port: 3306
+    host: 127.0.0.1
+    port: 3307
+    username: root
+    pw: 766498

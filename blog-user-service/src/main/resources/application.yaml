@@ -4,105 +4,56 @@ spring:
   application:
     name: blog-user-service
   profiles:
-    active: dev  # 激活的配置文件
-  datasource:
-    url: jdbc:mysql://${yuntan.db.host:127.0.0.1}:${yuntan.db.port:3306}/blog-user?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${yuntan.db.username:root}
-    password: ${yuntan.db.pw:root}
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
-        username: nacos                   # Nacos用户名（默认）
-        password: 766498                   # Nacos密码（默认）
-        namespace: public
-        group: DEFAULT_GROUP
-      config:
-        import-check:
-          enabled: false
+    active: local  # 激活的配置文件
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-mybatis-plus:
-  configuration:
-    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  global-config:
-    db-config:
-      update-strategy: not_null
-      id-type: assign_id
-    banner: false
-  mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: com.yuntan.blog.user.entity
-logging:
-  level:
-    com.yuntan: debug
-    root: info
-    com.baomidou.mybatisplus: warn
-  pattern:
-    console: "%d{HH:mm:ss:SSS} [%thread] %-5level %logger{50} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss:SSS} [%thread] %-5level %logger{50} - %msg%n"
-    dateformat: HH:mm:ss:SSS
-  file:
-    name: logs/${spring.application.name}/${spring.application.name}.log
-  logback:
-    rollingpolicy:
-      max-file-size: 100MB
-      max-history: 7
-      total-size-cap: 1GB
-      file-name-pattern: "${LOG_FILE}.%d{yyyy-MM-dd}.%i.log"
-knife4j:
-  enable: true
-  openapi:
-    title: ${api.info.title}
-    description: ${api.info.description}
-    version: ${api.info.version}
-    contact:
-      name: ${api.info.contact-name}
-      email: ${api.info.contact-email}
-      url: ${api.info.contact-url}
-    license: Apache 2.0
-    license-url: https://www.apache.org/licenses/LICENSE-2.0.html
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-    enabled: true
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    tags-sorter: alpha
-    operations-sorter: alpha
-  group-configs:
-    - group: "前台接口"
-      paths-to-match: "/front/**"
-      packages-to-scan: com.yuntan.blog.user.controller.front
-    - group: "后台接口"
-      paths-to-match: "/admin/**"
-      packages-to-scan: com.yuntan.blog.user.controller.admin
-  default-flat-param-object: true
+  # 新版加载方式：直接通过 import 导入
+  config:
+    import:
+      # 1. 导入自身服务的配置 (blog-user-service-dev.yaml)
+      - optional:nacos:${spring.application.name}-${spring.profiles.active}.yaml
+      # 2. 导入公共配置 (shared-xxx.yaml)
+      - optional:nacos:shared-jdbc.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-log.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-swagger.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: public
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        refresh: true
+        username: nacos  # 默认用户名
+        password: 766498  # 默认密码
+          # 其他配置...
+      discovery:
+        username: nacos
+        password: 766498
 api:
   info:
-    title: 云坛博客 API 文档
-    description: 基于 Spring Boot 3 + SpringDoc + Knife4j 的接口文档
+    title: 云坛博客用户服务API
+    description: "云坛博客用户服务API接口文档"
     version: v1.0.0
     contact-name: 苜玥
     contact-email: 2929028544@qq.com
     contact-url: https://www.yuntan.com
+  packages-to-scan:
+    front: com.yuntan.blog.user.controller.front
+    admin: com.yuntan.blog.user.controller.admin
+# JWT认证配置（极简版：仅登录认证，无角色鉴权）
 yuntan:
-  db:
-    host: 127.0.0.1
-    port: 3306
-    username: root
-    pw: root
   jwt:
     location: classpath:yuntan.jks       # JKS密钥文件路径
     alias: yuntan                        # JKS密钥库别名
     password: 766498                     # 改为你指定的密码 766498
     token-ttl: 10800000                  # 令牌有效期（3小时）
-    refresh-ttl: 259200000               # 刷新令牌有效期（3天）
+    refresh-ttl: 604800000               # 刷新令牌有效期（7天）
     issuer: yuntan-blog                  # JWT签发者
     subject: blog-user-service           # JWT主题
     header: Authorization                # JWT请求头名称
     prefix: Bearer                       # JWT令牌前缀
+
+

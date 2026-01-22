@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: blog-common
+  # 新版加载方式：直接通过 import 导入
+  config:
+    import:
+      # 1. 导入自身服务的配置 (blog-user-service-dev.yaml)
+      - optional:nacos:${spring.application.name}-${spring.profiles.active}.yaml
+      # 2. 导入公共配置 (shared-xxx.yaml)
+      - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: public
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        refresh: true
+        username: nacos  # 默认用户名
+        password: 766498  # 默认密码
+        # 其他配置...
+      discovery:
+        username: nacos
+        password: 766498
