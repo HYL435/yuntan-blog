@@ -13,7 +13,7 @@ public class UserDTO {
      * 用户id
      */
     @Schema(description = "用户ID", example = "1")
-    private long id;
+    private Long id;
     
     /**
      * 昵称

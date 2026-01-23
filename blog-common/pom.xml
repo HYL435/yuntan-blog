@@ -39,6 +39,7 @@
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+            <version>3.1.1</version>
         </dependency>
         <!-- 2. MyBatis‑Plus Core (分页和排序类) -->
         <dependency>
@@ -77,26 +78,41 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-context</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
         <pluginManagement>
             <plugins>
-
-                <!-- 编译插件：主项目已经定义版本，这里继承即可 -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <!-- 父 POM 已定义版本 -->
                     <configuration>
                         <annotationProcessorPaths>
                             <path>
                                 <groupId>org.projectlombok</groupId>
                                 <artifactId>lombok</artifactId>
+                                <version>1.18.42</version> <!-- 添加版本号 -->
                             </path>
                             <path>
                                 <groupId>org.springframework.boot</groupId>
                                 <artifactId>spring-boot-configuration-processor</artifactId>
+                                <version>3.0.0</version>
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
@@ -126,5 +142,6 @@
             </plugins>
         </pluginManagement>
     </build>
+
 
 </project>

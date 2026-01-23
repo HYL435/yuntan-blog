@@ -41,7 +41,6 @@ spring:
         password: ${spring.cloud.nacos.password}
         import:
           # 1. 导入自身服务的配置 (blog-user-service-dev.yaml)
-          - optional:nacos:${spring.application.name}-${spring.profiles.active}.yaml
           # 2. 导入公共配置 (shared-xxx.yaml)
           - optional:nacos:shared-jdbc.yaml?group=DEFAULT_GROUP&refresh=true
           - optional:nacos:shared-log.yaml?group=DEFAULT_GROUP&refresh=true

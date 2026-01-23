@@ -10,10 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @Tag(description = "前台用户相关接口", name = "用户管理")
@@ -44,6 +41,17 @@ public class FrontUserController {
         UserLoginVO userLoginVO = userService.loginUser(userLoginDTO);
 
         return Result.ok(userLoginVO);
+    }
+
+    @Operation(summary = "根据用户ID获取用户信息", description = "包括用户名，昵称，邮箱等基本信息")
+    @GetMapping("/{id}")
+    public Result<UserVO> getUserById(@PathVariable Long id) {
+
+        log.info("根据用户ID获取用户信息");
+
+        UserVO userVO = userService.getUserById(id);
+
+        return Result.ok(userVO);
     }
 
 }

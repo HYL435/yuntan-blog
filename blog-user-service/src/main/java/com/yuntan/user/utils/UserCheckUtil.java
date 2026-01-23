@@ -1,10 +1,7 @@
 package com.yuntan.user.utils;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.yuntan.common.constant.MessageConstant;
 import com.yuntan.common.exception.BusinessException;
-import com.yuntan.user.domain.dto.front.UserDTO;
-import com.yuntan.user.domain.dto.front.UserRegisterDTO;
 import com.yuntan.user.domain.po.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

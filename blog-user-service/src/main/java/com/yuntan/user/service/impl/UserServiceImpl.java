@@ -1,19 +1,15 @@
 package com.yuntan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.yuntan.common.constant.DefaultImageURLConstant;
-import com.yuntan.common.constant.MessageConstant;
-import com.yuntan.common.constant.RoleConstant;
-import com.yuntan.common.constant.StatusConstant;
+import com.yuntan.common.constant.*;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.user.domain.dto.front.UserLoginDTO;
 import com.yuntan.user.domain.dto.front.UserRegisterDTO;
 import com.yuntan.user.domain.po.User;
 import com.yuntan.user.domain.vo.front.UserLoginVO;
+import com.yuntan.user.domain.vo.front.UserVO;
 import com.yuntan.user.mapper.UserMapper;
 import com.yuntan.user.service.IUserService;
 import com.yuntan.user.utils.JwtUtil;
@@ -22,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -92,32 +90,74 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 参数校验
         userCheckUtil.userLoginChack(user);
 
-        // 密码加密（使用 BCrypt）
-        String password = encryptedPassword(user.getPassword());
-        // 获取用户名或邮箱
-        String usernameOrEmail = StringUtils.hasText(user.getUsername()) ? user.getUsername() : user.getEmail();
-
-        UserLoginVO userLoginVO = null;
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         // 根据用户名或邮箱查询用户
-        if (isEmailExist(user.getEmail()) || isUsernameExist(user.getUsername())) {
-            // 用户名 OR 邮箱 匹配 + 密码匹配
-            wrapper.eq(User::getPassword, password) // 密码等于传入值（注意：生产环境需先加密）
-                    .and(i -> i.eq(User::getUsername, usernameOrEmail) // 用户名匹配
-                            .or() // 或
-                            .eq(User::getEmail, usernameOrEmail)); // 邮箱匹配
-            // 查询用户是否存在
-            if (ObjectUtil.isNotEmpty(this.getOne(wrapper))) {
-                User loginUser = this.getOne(wrapper);
-                // 生成jwt令牌返回给前端
-                String token = jwtUtil.createToken(loginUser.getId());
-                // 将用户登录信息转换为VO返回
-                userLoginVO = BeanUtil.copyProperties(loginUser, UserLoginVO.class);
-                userLoginVO.setToken(token);
-            } else {
-                throw BusinessException.badRequest(MessageConstant.ACCOUNT_OR_PASSWORD_ERROR);
-            }
+        UserLoginVO userLoginVO = selectUserByInfo(user);
+
+        // 账号状态校验
+        if (Objects.equals(userLoginVO.getStatus(), StatusConstant.DISABLE)) {
+            throw new BusinessException(MessageConstant.ACCOUNT_LOCKED);
         }
+
+        return userLoginVO;
+    }
+
+    /**
+     * 根据用户ID获取用户信息
+     */
+    @Override
+    public UserVO getUserById(Long id) {
+
+        User user = new User();
+        user.setId(id);
+
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getId, id)
+                .eq(User::getDeleted, DeleteStatusConstant.NOT_DELETED);
+
+        User userInfo = this.getOne(wrapper);
+
+        return BeanUtil.copyProperties(userInfo, UserVO.class);
+    }
+
+    // 根据用户名或邮箱查询用户
+    private UserLoginVO selectUserByInfo(User user) {
+        String usernameOrEmail = StringUtils.hasText(user.getUsername())
+                ? user.getUsername()
+                : user.getEmail();
+
+        if (!StringUtils.hasText(usernameOrEmail)) {
+            throw BusinessException.badRequest("用户名或邮箱不能为空");
+        }
+
+        // 1. 先根据用户名或邮箱查询用户（不比较密码）
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.and(i -> i.eq(User::getUsername, usernameOrEmail.trim())
+                        .or()
+                        .eq(User::getEmail, usernameOrEmail.trim()))
+                .eq(User::getDeleted, DeleteStatusConstant.NOT_DELETED);
+
+        User loginUser = this.getOne(wrapper);
+        if (loginUser == null) {
+            throw BusinessException.badRequest(MessageConstant.ACCOUNT_OR_PASSWORD_ERROR);
+        }
+
+        // 2. 使用 matches() 方法验证密码
+        if (!passwordEncoder.matches(user.getPassword(), loginUser.getPassword())) {
+            throw BusinessException.badRequest(MessageConstant.ACCOUNT_OR_PASSWORD_ERROR);
+        }
+
+        // 3. 账号状态校验
+        if (Objects.equals(loginUser.getStatus(), StatusConstant.DISABLE)) {
+            throw new BusinessException(MessageConstant.ACCOUNT_LOCKED);
+        }
+
+        // 4. 生成令牌
+        String token = jwtUtil.createToken(loginUser.getId());
+
+        // 5. 转换为VO
+        UserLoginVO userLoginVO = BeanUtil.copyProperties(loginUser, UserLoginVO.class);
+        userLoginVO.setToken(token);
+
         return userLoginVO;
     }
 
