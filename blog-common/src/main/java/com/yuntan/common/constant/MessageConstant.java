@@ -48,4 +48,8 @@ public class MessageConstant {
     public static final String FAILED = "操作失败";
     public static final String INVALID_TOKEN = "令牌无效或已过期";
     public static final String NOT_FOUND = "不存在";
+    public static final String NICKNAME_FORMAT_INVALID = "昵称格式不正确，长度应在2-30个字符之间";
+    public static final String OLD_PASSWORD_INCORRECT = "旧密码不正确";
+    public static final String LOGOUT_FAILED = "登出失败";
+    public static final String USER_NOT_FOUND = "用户未找到";
 }

@@ -5,20 +5,28 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuntan.common.constant.*;
 import com.yuntan.common.exception.BusinessException;
-import com.yuntan.user.domain.dto.front.UserLoginDTO;
-import com.yuntan.user.domain.dto.front.UserRegisterDTO;
+import com.yuntan.common.utils.BeanUtils;
+import com.yuntan.common.utils.OssOptionUtil;
+import com.yuntan.user.domain.dto.front.*;
 import com.yuntan.user.domain.po.User;
 import com.yuntan.user.domain.vo.front.UserLoginVO;
 import com.yuntan.user.domain.vo.front.UserVO;
 import com.yuntan.user.mapper.UserMapper;
 import com.yuntan.user.service.IUserService;
 import com.yuntan.user.utils.JwtUtil;
+import com.yuntan.user.utils.TokenBlacklistUtil;
+import com.yuntan.user.utils.TokenResolveUtil;
 import com.yuntan.user.utils.UserCheckUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -33,6 +41,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final JwtUtil jwtUtil;
     // mapper
     private final UserMapper userMapper;
+    // OSS 工具类
+    private final OssOptionUtil ossOptionUtil;
+    // Redis 操作模板
+    private final TokenBlacklistUtil tokenBlacklistUtil;
+    // token解析工具
+    private final TokenResolveUtil tokenResolveUtil;
 
     /**
      * 用户注册
@@ -40,7 +54,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public UserLoginVO registerUser(UserRegisterDTO userRegisterDTO) {
 
-        User user = BeanUtil.copyProperties(userRegisterDTO, User.class);
+        User user = BeanUtils.copyBean(userRegisterDTO, User.class);
 
         // 参数校验
         userCheckUtil.userRegisterChack(user);
@@ -71,7 +85,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String token = jwtUtil.createToken(user.getId());
 
         // 将用户注册信息转换为VO返回
-        UserLoginVO userLoginVO = BeanUtil.copyProperties(user, UserLoginVO.class);
+        UserLoginVO userLoginVO = BeanUtils.copyBean(user, UserLoginVO.class);
         userLoginVO.setId(user.getId());
         userLoginVO.setToken(token);
 
@@ -84,9 +98,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 用户登录
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserLoginVO loginUser(UserLoginDTO userLoginDTO) {
 
-        User user = BeanUtil.copyProperties(userLoginDTO, User.class);
+        User user = BeanUtils.copyBean(userLoginDTO, User.class);
         // 参数校验
         userCheckUtil.userLoginChack(user);
 
@@ -107,16 +122,124 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public UserVO getUserById(Long id) {
 
-        User user = new User();
-        user.setId(id);
-
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getId, id)
                 .eq(User::getDeleted, DeleteStatusConstant.NOT_DELETED);
 
         User userInfo = this.getOne(wrapper);
 
-        return BeanUtil.copyProperties(userInfo, UserVO.class);
+        return BeanUtils.copyBean(userInfo, UserVO.class);
+    }
+
+    /**
+     * 修改用户信息
+     */
+    @Transactional(rollbackFor = Exception.class) // 开启事务
+    @Override
+    public void reviseUserInfo(UserDTO userDTO) {
+
+        User user = BeanUtils.copyBean(userDTO, User.class);
+
+        // 参数校验
+        userCheckUtil.reviseUserInfoCheck(user);
+
+        // 数据清洗
+        if (StringUtils.hasText(user.getNickname())) {
+            user.setNickname(user.getNickname().trim());
+        }
+        if (StringUtils.hasText(user.getImage())) {
+            user.setImage(user.getImage().trim());
+        }
+
+        // 上传头像到OSS并获取URL，并存入user
+        try {
+            // 获取原来的用户信息
+            User oldUser = this.getById(user.getId());
+            if (oldUser == null) {
+                throw new BusinessException(MessageConstant.USER_NOT_FOUND);
+            }
+            // 清理oss上的原头像
+            ossOptionUtil.deleteFile(oldUser.getImage());
+            // 上传新头像
+            String image = ossOptionUtil.uploadFile(userDTO.getImageFile(), FilePathConstant.USER_AVATAR_PATH);
+            // 将新头像URL存入user
+            user.setImage(image);
+        } catch (IOException e) {
+            throw new BusinessException(MessageConstant.UPLOAD_FAILED);
+        }
+
+        // 更新用户信息
+        this.updateById(user);
+    }
+
+    /**
+     * 修改用户密码
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void reviseUserPassword(UpdateUserPwdDTO updateUserPwdDTO) {
+
+        // 参数校验
+        userCheckUtil.reviseUserPasswordCheck(updateUserPwdDTO);
+
+        // 获取用户信息
+        User oldUser = this.getById(updateUserPwdDTO.getId());
+
+        // 校验旧密码是否正确
+        if (!passwordEncoder.matches(updateUserPwdDTO.getOldPassword(), oldUser.getPassword())) {
+            throw BusinessException.badRequest(MessageConstant.OLD_PASSWORD_INCORRECT);
+        }
+
+        // 加密新密码
+        String newEncryptedPassword = encryptedPassword(updateUserPwdDTO.getNewPassword());
+
+        // 更新密码
+        User updateUser = User.builder()
+                .id(updateUserPwdDTO.getId())
+                .password(newEncryptedPassword).build();
+        this.updateById(updateUser);
+
+    }
+
+    /**
+     * TODO 用户忘记密码
+     */
+    @Override
+    public void forgetUserPassword(ForgetUserPwdDTO forgetUserPwdDTO) {
+
+        // 参数校验
+
+        // 验证邮箱是否存在
+
+        // TODO 验证码校验（略）
+
+        // 加密新密码
+        String newEncryptedPassword = encryptedPassword(forgetUserPwdDTO.getNewPassword());
+
+        // 更新密码
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, forgetUserPwdDTO.getEmail().trim())
+                .eq(User::getDeleted, DeleteStatusConstant.NOT_DELETED);
+
+    }
+
+    /**
+     * 用户登出
+     */
+    @Override
+    public void logoutUser(HttpServletRequest request) {
+
+        // 1. 从请求头中提取Token
+        String token = tokenResolveUtil.extractTokenFromHeader(request);
+
+        // 连接Redis将token加入黑名单
+        tokenBlacklistUtil.addLogoutToken(token);
+
+        // 判断是否存入成功
+        if (!tokenBlacklistUtil.isLogoutToken(token)) {
+            throw BusinessException.internalError(MessageConstant.LOGOUT_FAILED);
+        }
+
     }
 
     // 根据用户名或邮箱查询用户
@@ -136,7 +259,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         .eq(User::getEmail, usernameOrEmail.trim()))
                 .eq(User::getDeleted, DeleteStatusConstant.NOT_DELETED);
 
+        // 执行查询
         User loginUser = this.getOne(wrapper);
+
+        // 若用户存在，更新最后登录时间
+        if (!ObjectUtils.isEmpty(loginUser)) {
+            // 设置最后登录时间
+            loginUser.setLastLoginTime(LocalDateTime.now());
+            // 执行更新（仅更新修改的字段，推荐用updateById）
+            this.updateById(loginUser);
+        }
         if (loginUser == null) {
             throw BusinessException.badRequest(MessageConstant.ACCOUNT_OR_PASSWORD_ERROR);
         }
@@ -155,7 +287,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String token = jwtUtil.createToken(loginUser.getId());
 
         // 5. 转换为VO
-        UserLoginVO userLoginVO = BeanUtil.copyProperties(loginUser, UserLoginVO.class);
+        UserLoginVO userLoginVO = BeanUtils.copyBean(loginUser, UserLoginVO.class);
         userLoginVO.setToken(token);
 
         return userLoginVO;
@@ -173,10 +305,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 // 策略B（可选）：只取邮箱 @ 前面的部分，如果需要可以取消注释下面这行
                 // user.setNickname(user.getEmail().substring(0, user.getEmail().indexOf("@")));
         }
-        // 设置默认角色为普通用户
-        user.setRole(RoleConstant.ROLE_USER);
-        // 设置默认状态为正常
-        user.setStatus(StatusConstant.ENABLE);
         // 设置用户默认头像
         user.setImage(DefaultImageURLConstant.DEFAULT_AVATAR_URL);
 

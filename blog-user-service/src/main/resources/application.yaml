@@ -17,7 +17,8 @@ spring:
       - optional:nacos:shared-jdbc.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:shared-log.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:shared-swagger.yaml?group=DEFAULT_GROUP&refresh=true
-      - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-redis.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-mybatis-plus.yaml?group=DEFAULT_GROUP&refresh=true
   cloud:
     nacos:
       config:
@@ -28,10 +29,13 @@ spring:
         refresh: true
         username: nacos  # 默认用户名
         password: 766498  # 默认密码
-          # 其他配置...
+        # 其他配置...
       discovery:
         username: nacos
         password: 766498
+      server-addr: 127.0.0.1:8848
+      username: nacos
+      password: 766498
 api:
   info:
     title: 云坛博客用户服务API
@@ -41,8 +45,8 @@ api:
     contact-email: 2929028544@qq.com
     contact-url: https://www.yuntan.com
   packages-to-scan:
-    front: com.yuntan.blog.user.controller.front
-    admin: com.yuntan.blog.user.controller.admin
+    front: com.yuntan.user.controller.front
+    admin: com.yuntan.user.controller.admin
 # JWT认证配置（极简版：仅登录认证，无角色鉴权）
 yuntan:
   jwt:

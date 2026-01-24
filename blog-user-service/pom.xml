@@ -100,7 +100,6 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
-
         <!-- 2. 配置中心（Nacos Config） -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

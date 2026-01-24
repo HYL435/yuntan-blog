@@ -1,55 +1,38 @@
 server:
-  port: 9000  # 网关通常使用 9000 或 80 端口，避免与后端服务(8080)冲突
+  port: 9000  # 网关端口，避免与后端服务冲突
 spring:
   application:
-    name: blog-gateway
+    name: blog-gateway  # 网关唯一服务名，确保和其他服务（如blog-user）不重复
   profiles:
-    active: dev  # 必须指定环境，否则无法解析下面的 active 变量
-
-  # =======================================================
-  # 【核心修改】Spring Boot 3 官方推荐配置导入方式
-  # =======================================================
+    active: dev  # 指定环境为dev，加载对应环境的配置
   config:
     import:
-      # 语法格式：optional:nacos:DataID?group=GROUP&refresh=true
-      # 注意：必须显式指定要加载的文件名
-
-      # 1. 加载主应用配置 (对应 Nacos 中的 blog-gateway-dev.yaml)
-      - optional:nacos:${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
-
-      # 2. (可选) 加载共享配置/公共配置 (对应 Nacos 中的 blog-common.yaml)
-      # 如果你有公共配置，请取消注释下面这行：
-      # - optional:nacos:blog-common.yaml?group=DEFAULT_GROUP&refresh=true
+      # 优化：按优先级排序公共配置，统一添加optional避免配置不存在时启动失败
+      - optional:nacos:shared-log.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-jdbc.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-mybatis-plus.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-redis.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-swagger.yaml?group=DEFAULT_GROUP&refresh=true
+      # 关键：添加网关自身的配置文件（如果有），避免和common配置混淆
 
   cloud:
     nacos:
-      # Nacos 服务器全局地址
+      # 全局Nacos服务地址，统一复用，避免重复配置
       server-addr: 127.0.0.1:8848
       username: nacos
       password: 766498
-
-      # ---------------------------------------------------
-      # 1. Nacos Config (配置中心客户端设置)
-      # ---------------------------------------------------
+      # Nacos配置中心配置
       config:
         server-addr: ${spring.cloud.nacos.server-addr}
         file-extension: yaml
-        namespace: public
+        namespace: public  # 确认Nacos的namespace是public（默认是public，不要填错）
         group: DEFAULT_GROUP
-        # 认证信息
         username: ${spring.cloud.nacos.username}
         password: ${spring.cloud.nacos.password}
-        import:
-          # 1. 导入自身服务的配置 (blog-user-service-dev.yaml)
-          # 2. 导入公共配置 (shared-xxx.yaml)
-          - optional:nacos:shared-jdbc.yaml?group=DEFAULT_GROUP&refresh=true
-          - optional:nacos:shared-log.yaml?group=DEFAULT_GROUP&refresh=true
-          - optional:nacos:shared-swagger.yaml?group=DEFAULT_GROUP&refresh=true
-          - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
-
-      # ---------------------------------------------------
-      # 2. Nacos Discovery (注册中心)
-      # ---------------------------------------------------
+        # 优化：指定配置文件的dataId前缀，和服务名一致
+        prefix: ${spring.application.name}
+      # Nacos注册中心配置
       discovery:
         server-addr: ${spring.cloud.nacos.server-addr}
         namespace: ${spring.cloud.nacos.config.namespace}
@@ -58,19 +41,46 @@ spring:
         password: ${spring.cloud.nacos.password}
         metadata:
           version: v1.0
-
-  # 解决 Bean 覆盖问题
+          # 补充：添加元数据标识服务类型，便于排查
+          service-type: gateway
+    # 网关核心配置（补充：网关必须配置路由规则，否则无法转发请求）
+    gateway:
+      discovery:
+        locator:
+          enabled: true  # 开启服务发现，支持通过服务名转发
+          lower-case-service-id: true  # 服务名小写
+      routes:
+        # 示例：用户服务路由规则
+        - id: blog-user-service-route
+          uri: lb://blog-user-service  # 转发到Nacos中的blog-user-service服务
+          predicates:
+            - Path=/front/users/**  # 匹配用户服务的请求路径
+          filters:
+            - StripPrefix=0  # 不截取路径前缀（根据实际需求调整）
+  # 解决Bean覆盖问题（仅在必要时开启，生产环境建议排查Bean重复定义）
   main:
     allow-bean-definition-overriding: true
-# JWT认证配置（极简版：仅登录认证，无角色鉴权）
+
+# JWT认证配置（适配网关的AuthGlobalFilter）
 yuntan:
   jwt:
-    location: classpath:yuntan.jks       # JKS密钥文件路径
-    alias: yuntan                        # JKS密钥库别名
-    password: 766498                     # 改为你指定的密码 766498
-    token-ttl: 10800000                  # 令牌有效期（3小时）
-    refresh-ttl: 604800000               # 刷新令牌有效期（7天）
-    issuer: yuntan-blog                  # JWT签发者
-    subject: blog-user-service           # JWT主题
-    header: Authorization                # JWT请求头名称
-    prefix: Bearer                       # JWT令牌前缀
+    location: classpath:yuntan.jks  # JKS文件路径，确保文件在resources根目录
+    alias: yuntan                   # JKS密钥别名，和生成时一致
+    password: 766498                # JKS密钥库密码
+    token-ttl: 10800000             # token有效期3小时（10800秒）
+    refresh-ttl: 604800000          # 刷新令牌有效期7天
+    issuer: yuntan-blog             # JWT签发者
+    subject: blog-gateway           # 调整为网关的主题，和服务名一致
+    header: Authorization           # 请求头中的token字段名
+    prefix: Bearer                  # token前缀，需和前端一致
+  auth:
+    # 优化：路径匹配支持通配符，更灵活
+    exclude-paths:
+      - /front/users/login/**
+      - /front/users/register/**
+      - /docs/**
+      - /swagger-ui/**
+      - /v3/api-docs/**
+      - /actuator/**
+      # 补充：添加网关健康检查路径
+      - /health/**

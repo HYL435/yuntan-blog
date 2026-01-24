@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
 
@@ -22,8 +23,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OssOptionUtil {
 
-    private final OSS ossClient;
     private final OssProperties ossProperties;
+    private final OSS ossClient;
 
     /**
      * 上传 MultipartFile 到 OSS
@@ -174,7 +175,7 @@ public class OssOptionUtil {
             }
             // 兜底：直接取最后一个斜杠后的内容？不，这可能是 folder/file.ext
             // 简单处理：去掉协议头和域名
-            java.net.URL netUrl = new java.net.URL(url);
+            URL netUrl = new URL(url);
             String path = netUrl.getPath();
             return path.startsWith("/") ? path.substring(1) : path;
         } catch (Exception e) {

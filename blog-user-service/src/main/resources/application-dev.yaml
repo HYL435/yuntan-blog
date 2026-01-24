@@ -1,6 +1,15 @@
 yuntan:
   db:
+    # MySQL 基础连接配置
     host: 127.0.0.1
     port: 3307
+    name: blog-user
     username: root
     pw: 766498
+
+    # Hikari 连接池配置（修正重复max问题）
+    min-idle: 5
+    max-pool-size: 20
+    idle-timeout: 30000
+    max-lifetime: 1800000
+    connection-timeout: 30000

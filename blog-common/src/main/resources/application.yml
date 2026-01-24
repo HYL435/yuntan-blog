@@ -1,6 +1,4 @@
 spring:
-  application:
-    name: blog-common
   profiles:
     active: dev  # 激活的配置文件
   # 新版加载方式：直接通过 import 导入
@@ -9,6 +7,7 @@ spring:
       # 1. 导入自身服务的配置 (blog-user-service-dev.yaml)
       # 2. 导入公共配置 (shared-xxx.yaml)
       - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-redis.yaml?group=DEFAULT_GROUP&refresh=true
   cloud:
     nacos:
       config:

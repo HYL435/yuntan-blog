@@ -1,1 +1,2 @@
 com.yuntan.common.config.OssAutoConfiguration
+com.yuntan.common.config.OssProperties

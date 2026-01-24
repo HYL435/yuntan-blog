@@ -2,6 +2,9 @@ package com.yuntan.user.domain.dto.front;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
 
 /**
  * UserDTO
@@ -36,8 +39,8 @@ public class UserDTO {
     /**
      * 头像URL
      */
-    @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
-    private String image;
+    @Schema(description = "头像文件", example = "https://example.com/avatar.jpg")
+    private MultipartFile imageFile;
     
     /**
      * 个人简介

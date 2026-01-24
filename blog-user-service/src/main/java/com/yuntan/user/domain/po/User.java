@@ -1,8 +1,11 @@
 package com.yuntan.user.domain.po;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,6 +14,7 @@ import java.time.LocalDateTime;
  * 用户实体类
  */
 @Data
+@Builder
 @Schema(description = "用户实体")
 public class User {
 
@@ -144,6 +148,7 @@ public class User {
             description = "创建时间",
             example = "2024-01-01 00:00:00"
     )
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**
@@ -153,5 +158,6 @@ public class User {
             description = "最后更新时间",
             example = "2024-01-15 09:00:00"
     )
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 }
