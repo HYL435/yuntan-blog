@@ -43,4 +43,14 @@ public interface IUserService extends IService<User> {
      * 用户登出
      */
     void logoutUser(HttpServletRequest request);
+
+    /**
+     * 启用或禁用用户
+     */
+    void enableOrDisableUser(Long id, Integer status);
+
+    /**
+     * 升级用户为管理员
+     */
+    void upgradeAdmin(Long id);
 }

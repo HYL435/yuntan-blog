@@ -1,6 +1,9 @@
-package com.yuntan.user.domain.po;
+package com.yuntan.user.domain.vo.admin;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Schema(description = "用户实体")
-public class User {
+public class AdminUserVO {
 
     /**
      * 用户id
@@ -37,18 +40,6 @@ public class User {
             maxLength = 20
     )
     private String username;
-
-    /**
-     * 密码（8位及以上）
-     */
-    @Schema(
-            description = "密码（加密存储）",
-            example = "********",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            minLength = 8,
-            maxLength = 100
-    )
-    private String password;
 
     /**
      * 昵称
@@ -131,7 +122,6 @@ public class User {
             allowableValues = {"0", "1"},
             defaultValue = "0"
     )
-    @TableLogic
     private Integer deleted;
 
     /**

@@ -17,6 +17,21 @@ spring:
       # 关键：添加网关自身的配置文件（如果有），避免和common配置混淆
 
   cloud:
+    # 网关核心配置（补充：网关必须配置路由规则，否则无法转发请求）
+    gateway:
+      discovery:
+        locator:
+          enabled: true  # 开启服务发现，支持通过服务名转发
+          lower-case-service-id: true  # 服务名小写
+      routes:
+        # 示例：用户服务路由规则
+        - id: blog-user-service-route
+          uri: lb://blog-user-service  # 转发到Nacos中的blog-user-service服务
+          predicates:
+            # 多个路径用逗号分隔 → 网关解析为“或”逻辑
+            - Path=/front/users/**,/admin/users/**
+          filters:
+            - StripPrefix=0
     nacos:
       # 全局Nacos服务地址，统一复用，避免重复配置
       server-addr: 127.0.0.1:8848
@@ -43,23 +58,20 @@ spring:
           version: v1.0
           # 补充：添加元数据标识服务类型，便于排查
           service-type: gateway
-    # 网关核心配置（补充：网关必须配置路由规则，否则无法转发请求）
-    gateway:
-      discovery:
-        locator:
-          enabled: true  # 开启服务发现，支持通过服务名转发
-          lower-case-service-id: true  # 服务名小写
-      routes:
-        # 示例：用户服务路由规则
-        - id: blog-user-service-route
-          uri: lb://blog-user-service  # 转发到Nacos中的blog-user-service服务
-          predicates:
-            - Path=/front/users/**  # 匹配用户服务的请求路径
-          filters:
-            - StripPrefix=0  # 不截取路径前缀（根据实际需求调整）
+        ip: 127.0.0.1  # 指定网关实例IP，避免Nacos注册异常
   # 解决Bean覆盖问题（仅在必要时开启，生产环境建议排查Bean重复定义）
   main:
     allow-bean-definition-overriding: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway,health  # 明确暴露gateway和health端点
+  endpoint:
+    gateway:
+      enabled: true  # 强制开启gateway端点
+    health:
+      show-details: always
 
 # JWT认证配置（适配网关的AuthGlobalFilter）
 yuntan:
@@ -78,6 +90,7 @@ yuntan:
     exclude-paths:
       - /front/users/login/**
       - /front/users/register/**
+      - /front/users/forgetPassword
       - /docs/**
       - /swagger-ui/**
       - /v3/api-docs/**

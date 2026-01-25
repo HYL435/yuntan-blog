@@ -1,19 +1,22 @@
 package com.yuntan.user.domain.query;
 
+import com.yuntan.common.domain.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
 /**
  * 用户查询参数DTO
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "用户查询参数")
-public class UserPageQuery {
+public class UserPageQuery extends PageQuery {
     
     /**
      * 用户名
@@ -69,32 +72,15 @@ public class UserPageQuery {
         allowableValues = {"1", "2"}
     )
     private Integer status;
-    
+
     /**
-     * 页码
+     * 软删除：0-未删，1-已删
      */
-    @NotNull(message = "页码不能为空")
-    @Min(value = 1, message = "页码最小为1")
     @Schema(
-        description = "页码（从1开始）", 
-        example = "1",
-        defaultValue = "1",
-        minimum = "1"
+            description = "软删除标记：0-未删，1-已删",
+            example = "0",
+            allowableValues = {"0", "1"},
+            defaultValue = "0"
     )
-    private Integer page;
-    
-    /**
-     * 每页记录数
-     */
-    @NotNull(message = "每页记录数不能为空")
-    @Min(value = 1, message = "每页记录数最小为1")
-    @Max(value = 100, message = "每页记录数最大为100")
-    @Schema(
-        description = "每页记录数", 
-        example = "10",
-        defaultValue = "10",
-        minimum = "1",
-        maximum = "100"
-    )
-    private Integer pageSize;
+    private Integer deleted;
 }

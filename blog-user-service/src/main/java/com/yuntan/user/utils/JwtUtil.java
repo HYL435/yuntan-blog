@@ -1,4 +1,4 @@
-package com.yuntan.user.utils;
+package com.yuntan.gateway.utils;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.exceptions.ValidateException;
@@ -8,21 +8,21 @@ import cn.hutool.jwt.JWTValidator;
 import cn.hutool.jwt.signers.JWTSigner;
 import cn.hutool.jwt.signers.JWTSignerUtil;
 import com.yuntan.common.constant.MessageConstant;
+import com.yuntan.common.exception.UnauthorizedException;
 import com.yuntan.user.config.JwtProperties;
-import com.yuntan.common.exception.UnauthorizedException; // 假设你有这个异常类，如果没有请替换为 RuntimeException
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.yuntan.user.constant.KeyConstant;
 import lombok.Data;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.KeyPair;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -67,27 +67,28 @@ public class JwtUtil {
     /**
      * 创建 Access Token
      */
-    public String createToken(Long userId) {
-        return createToken(userId, jwtProperties.getTokenTtl());
+    public String createToken(Integer role, Long userId) {
+        return createToken(role, userId, jwtProperties.getTokenTtl());
     }
 
     /**
      * 创建 Refresh Token
      */
-    public String createRefreshToken(Long userId) {
-        return createToken(userId, jwtProperties.getRefreshTtl());
+    public String createRefreshToken(Integer role, Long userId) {
+        return createToken(role, userId, jwtProperties.getRefreshTtl());
     }
 
     /**
      * 创建 Token 通用方法
      */
-    public String createToken(Long userId, Long ttl) {
+    public String createToken(Integer role, Long userId, Long ttl) {
         // 计算过期时间
         Date expireDate = new Date(System.currentTimeMillis() + ttl);
 
         return JWT.create()
                 // 1. 设置 Payload (载荷)
-                .setPayload("user", userId)
+                .setPayload(KeyConstant.USER_ID, userId)
+                .setPayload(KeyConstant.ROLE, role)
                 // 2. 设置标准声明
                 .setIssuer(jwtProperties.getIssuer())   // 签发者
                 .setSubject(jwtProperties.getSubject()) // 主题
@@ -101,7 +102,7 @@ public class JwtUtil {
     /**
      * 解析并校验 Token
      */
-    public Long parseToken(String token) {
+    public Map<String, Object> parseToken(String token) {
         // 1. 校验非空
         if (token == null) {
             throw new UnauthorizedException(MessageConstant.USER_NOT_LOGIN);
@@ -132,13 +133,17 @@ public class JwtUtil {
         }
 
         // 5. 获取并转换数据
-        Object userPayload = jwt.getPayload("user");
-        if (userPayload == null) {
+        Object userPayload = jwt.getPayload(KeyConstant.USER_ID);
+        Object rolePayload = jwt.getPayload(KeyConstant.ROLE);
+        if (userPayload == null || rolePayload == null) {
             throw new UnauthorizedException("无效的Token，缺少用户信息");
         }
 
         try {
-            return Long.valueOf(userPayload.toString());
+            Map<String, Object> payload = new HashMap<>();
+            payload.put(KeyConstant.USER_ID, Long.parseLong(userPayload.toString()));
+            payload.put(KeyConstant.ROLE, Integer.parseInt(rolePayload.toString()));
+            return payload;
         } catch (NumberFormatException e) {
             throw new UnauthorizedException("无效的Token，用户ID格式错误");
         }

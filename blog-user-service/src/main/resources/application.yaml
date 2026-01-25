@@ -33,6 +33,7 @@ spring:
       discovery:
         username: nacos
         password: 766498
+        ip: 127.0.0.1  # 指定网关实例IP，避免Nacos注册异常
       server-addr: 127.0.0.1:8848
       username: nacos
       password: 766498

@@ -7,13 +7,13 @@ import com.yuntan.common.constant.*;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.common.utils.BeanUtils;
 import com.yuntan.common.utils.OssOptionUtil;
+import com.yuntan.gateway.utils.JwtUtil;
 import com.yuntan.user.domain.dto.front.*;
 import com.yuntan.user.domain.po.User;
 import com.yuntan.user.domain.vo.front.UserLoginVO;
 import com.yuntan.user.domain.vo.front.UserVO;
 import com.yuntan.user.mapper.UserMapper;
 import com.yuntan.user.service.IUserService;
-import com.yuntan.user.utils.JwtUtil;
 import com.yuntan.user.utils.TokenBlacklistUtil;
 import com.yuntan.user.utils.TokenResolveUtil;
 import com.yuntan.user.utils.UserCheckUtil;
@@ -82,7 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         this.save(user);
 
         // 生成jwt令牌返回给前端，自动登录
-        String token = jwtUtil.createToken(user.getId());
+        String token = jwtUtil.createToken(user.getRole(), user.getId());
 
         // 将用户注册信息转换为VO返回
         UserLoginVO userLoginVO = BeanUtils.copyBean(user, UserLoginVO.class);
@@ -128,7 +128,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         User userInfo = this.getOne(wrapper);
 
-        return BeanUtils.copyBean(userInfo, UserVO.class);
+        UserVO userVO = BeanUtils.copyBean(userInfo, UserVO.class);
+
+        if (userVO == null) {
+            throw new BusinessException(MessageConstant.USER_NOT_FOUND);
+        }
+
+        return userVO;
     }
 
     /**
@@ -242,6 +248,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     }
 
+    /**
+     * 启用或禁用用户
+     */
+    @Override
+    public void enableOrDisableUser(Long id, Integer status) {
+
+        // 创建用户对象
+        User user = User.builder()
+                .id(id)
+                .status(status)
+                .build();
+
+        // 更新用户状态
+        this.updateById(user);
+
+    }
+
+    /**
+     * 升级用户为管理员
+     */
+    @Override
+    public void upgradeAdmin(Long id) {
+
+        // 创建用户对象
+        User user = User.builder()
+                .id(id)
+                .role(UserRoleConstant.ROLE_ADMIN)
+                .build();
+
+        // 更新用户角色
+        this.updateById(user);
+
+    }
+
     // 根据用户名或邮箱查询用户
     private UserLoginVO selectUserByInfo(User user) {
         String usernameOrEmail = StringUtils.hasText(user.getUsername())
@@ -284,7 +324,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
 
         // 4. 生成令牌
-        String token = jwtUtil.createToken(loginUser.getId());
+        String token = jwtUtil.createToken(loginUser.getRole(), loginUser.getId());
 
         // 5. 转换为VO
         UserLoginVO userLoginVO = BeanUtils.copyBean(loginUser, UserLoginVO.class);
@@ -305,6 +345,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 // 策略B（可选）：只取邮箱 @ 前面的部分，如果需要可以取消注释下面这行
                 // user.setNickname(user.getEmail().substring(0, user.getEmail().indexOf("@")));
         }
+        // 设置默认角色
+        user.setRole(UserRoleConstant.ROLE_USER);
         // 设置用户默认头像
         user.setImage(DefaultImageURLConstant.DEFAULT_AVATAR_URL);
 

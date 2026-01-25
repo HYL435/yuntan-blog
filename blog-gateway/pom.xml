@@ -21,6 +21,10 @@
             <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
             <version>4.3.3</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <!--        nacos 服务注册发现-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
@@ -31,6 +35,7 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
+        <!--负载均衡-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
