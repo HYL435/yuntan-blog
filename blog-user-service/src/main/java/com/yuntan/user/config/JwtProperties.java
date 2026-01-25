@@ -5,10 +5,12 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
 @Data
 @Component
+@RefreshScope
 @ConfigurationProperties(prefix = "yuntan.jwt")
 public class JwtProperties {
 

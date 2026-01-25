@@ -21,7 +21,7 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true  # 开启服务发现，支持通过服务名转发
+          enabled: false  # 开启服务发现，支持通过服务名转发
           lower-case-service-id: true  # 服务名小写
       routes:
         # 示例：用户服务路由规则
@@ -34,7 +34,7 @@ spring:
             - StripPrefix=0
     nacos:
       # 全局Nacos服务地址，统一复用，避免重复配置
-      server-addr: 127.0.0.1:8848
+      server-addr: nacos:8848
       username: nacos
       password: 766498
       # Nacos配置中心配置
@@ -58,7 +58,6 @@ spring:
           version: v1.0
           # 补充：添加元数据标识服务类型，便于排查
           service-type: gateway
-        ip: 127.0.0.1  # 指定网关实例IP，避免Nacos注册异常
   # 解决Bean覆盖问题（仅在必要时开启，生产环境建议排查Bean重复定义）
   main:
     allow-bean-definition-overriding: true
