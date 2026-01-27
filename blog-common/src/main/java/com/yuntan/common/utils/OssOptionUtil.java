@@ -8,15 +8,13 @@ import com.yuntan.common.config.OssProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.Date;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -27,39 +25,7 @@ public class OssOptionUtil {
     private final OSS ossClient;
 
     /**
-     * 上传 MultipartFile 到 OSS
-     *
-     * @param file       上传的文件
-     * @param folderPath 文件夹路径，如 "avatar/user"，开头结尾无需斜杠
-     * @return 文件的公共访问 URL
-     */
-    public String uploadFile(MultipartFile file, String folderPath) throws IOException {
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isEmpty()) {
-            throw new IllegalArgumentException("文件名不能为空");
-        }
-
-        // 1. 构建文件夹路径 (处理斜杠)
-        String path = "";
-        if (StringUtils.hasText(folderPath)) {
-            path = folderPath;
-            if (!path.endsWith("/")) {
-                path = path + "/";
-            }
-            if (path.startsWith("/")) {
-                path = path.substring(1);
-            }
-        }
-
-        // 2. 构建唯一文件名：folder/uuid.ext
-        String ext = getFileExtension(originalFilename);
-        String fileName = path + UUID.randomUUID().toString().replace("-", "") + (ext.isEmpty() ? "" : "." + ext);
-
-        return uploadInputStream(file.getInputStream(), fileName, file.getContentType());
-    }
-
-    /**
-     * 上传字节数组
+     * 上传字节数组到 OSS
      */
     public String uploadBytes(byte[] bytes, String fileName, String contentType) {
         try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
@@ -71,7 +37,7 @@ public class OssOptionUtil {
     }
 
     /**
-     * 通用上传方法（核心）
+     * 通用上传方法（核心），上传输入流
      */
     private String uploadInputStream(InputStream inputStream, String fileName, String contentType) {
         try {
@@ -79,11 +45,11 @@ public class OssOptionUtil {
             if (contentType != null) {
                 metadata.setContentType(contentType);
             }
-            // 默认设置公共读权限，防止浏览器访问直接下载而不是预览（可选）
-             metadata.setObjectAcl(CannedAccessControlList.PublicRead);
+            // 默认设置公共读权限
+            metadata.setObjectAcl(CannedAccessControlList.PublicRead);
 
             PutObjectRequest putRequest = new PutObjectRequest(
-                    ossProperties.getBucketName(), // 使用 standard getter
+                    ossProperties.getBucketName(),
                     fileName,
                     inputStream,
                     metadata
@@ -118,20 +84,17 @@ public class OssOptionUtil {
 
     /**
      * 获取私有链接（带签名，有效期默认为1小时）
-     * 如果你的 Bucket 权限设置为私有，请调用此方法获取链接
      */
     public String getPrivateUrl(String fileName) {
-        // 设置URL过期时间为1小时
         Date expiration = new Date(System.currentTimeMillis() + 3600 * 1000);
         return ossClient.generatePresignedUrl(ossProperties.getBucketName(), fileName, expiration).toString();
     }
 
     /**
-     * 下载文件为字节数组
+     * 下载文件为字节数组（通用）
      */
     public byte[] downloadAsBytes(String fileName) {
         try (InputStream inputStream = ossClient.getObject(ossProperties.getBucketName(), fileName).getObjectContent()) {
-            // Java 9+ 方法
             return inputStream.readAllBytes();
         } catch (Exception e) {
             log.error("下载文件失败: {}", fileName, e);
@@ -140,21 +103,19 @@ public class OssOptionUtil {
     }
 
     /**
-     * 检查文件是否存在
+     * 检查文件是否存在（通用）
      */
     public boolean doesObjectExist(String fileName) {
         return ossClient.doesObjectExist(ossProperties.getBucketName(), fileName);
     }
 
     /**
-     * 删除文件
+     * 删除文件（通用）
      */
     public void deleteFile(String fileName) {
-        // 如果是完整URL，尝试提取文件名
         if (fileName.startsWith("http")) {
             fileName = getFileNameFromUrl(fileName);
         }
-
         if (doesObjectExist(fileName)) {
             ossClient.deleteObject(ossProperties.getBucketName(), fileName);
             log.info("文件已删除: {}", fileName);
@@ -162,31 +123,44 @@ public class OssOptionUtil {
     }
 
     /**
-     * 从完整 URL 中提取文件名 (bucket key)
+     * 从URL提取文件名（通用）
+     */
+    /**
+     * 从URL提取文件名（通用，替换弃用的URL类，适配Java 17+）
+     * 支持的URL格式：https://bucket.endpoint/folder/file.ext 或 http://bucket.endpoint/file.ext
      */
     private String getFileNameFromUrl(String url) {
-        try {
-            // 假设 URL 格式为 https://bucket.endpoint/folder/file.ext
-            // 这里的逻辑比较简单，如果使用 CDN 可能需要调整
-            int lastSlash = url.lastIndexOf(ossProperties.getEndpoint());
-            if (lastSlash != -1) {
-                // + endpoint长度 + 1 (斜杠)
-                return url.substring(url.indexOf("/", lastSlash));
-            }
-            // 兜底：直接取最后一个斜杠后的内容？不，这可能是 folder/file.ext
-            // 简单处理：去掉协议头和域名
-            URL netUrl = new URL(url);
-            String path = netUrl.getPath();
-            return path.startsWith("/") ? path.substring(1) : path;
-        } catch (Exception e) {
+        // 空值/非URL直接返回
+        if (url == null || !url.startsWith("http")) {
             return url;
         }
-    }
 
-    // --- 工具方法 ---
+        try {
+            // 1. 先用endpoint匹配（优先逻辑，最准确）
+            String endpoint = ossProperties.getEndpoint();
+            // 清理endpoint的协议前缀（如https://），避免匹配失败
+            String cleanEndpoint = endpoint.replaceAll("^https?://", "");
+            int endpointIndex = url.indexOf(cleanEndpoint);
+            if (endpointIndex != -1) {
+                // 找到endpoint后，截取其后的第一个斜杠到末尾（即文件名部分）
+                int fileNameStart = url.indexOf("/", endpointIndex + cleanEndpoint.length());
+                if (fileNameStart != -1) {
+                    return url.substring(fileNameStart + 1); // 去掉开头的/
+                }
+            }
 
-    private String getFileExtension(String filename) {
-        int dotIndex = filename.lastIndexOf('.');
-        return (dotIndex == -1) ? "" : filename.substring(dotIndex + 1).toLowerCase();
+            // 2. 备用逻辑：用URI解析路径（替代弃用的URL）
+            URI uri = URI.create(url);
+            String path = uri.getPath();
+            if (path == null || path.isEmpty()) {
+                return url;
+            }
+            // 去掉路径开头的/，返回纯文件名（如folder/file.ext）
+            return path.startsWith("/") ? path.substring(1) : path;
+
+        } catch (Exception e) {
+            log.warn("从URL提取文件名失败，URL: {}", url, e);
+            return url; // 解析失败时返回原URL，保证后续逻辑不报错
+        }
     }
 }

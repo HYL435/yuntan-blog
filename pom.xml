@@ -17,6 +17,7 @@
     <!-- ================= 子模块 ================= -->
     <modules>
         <module>blog-user-service</module>
+        <module>blog-article-service</module>
         <module>blog-gateway</module>
         <module>blog-common</module>
     </modules>
@@ -31,13 +32,14 @@
         <!-- Spring 生态 -->
         <spring.boot.version>3.4.4</spring.boot.version>
         <spring.cloud.version>2024.0.0</spring.cloud.version>
-        <spring.cloud.alibaba.version>2025.0.0.0</spring.cloud.alibaba.version>
+        <!-- 注意：Spring Cloud Alibaba 2025 版本目前可能还在孵化中，请确保该版本存在 -->
+        <spring.cloud.alibaba.version>2023.0.1.0</spring.cloud.alibaba.version>
 
         <!-- 常用组件 -->
-        <lombok.version>1.18.42</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <hutool.version>5.8.26</hutool.version>
-        <mybatis.plus.version>3.5.15</mybatis.plus.version>
-        <mysql.version>9.5.0</mysql.version>
+        <mybatis.plus.version>3.5.5</mybatis.plus.version>
+        <mysql.version>8.3.0</mysql.version>
     </properties>
 
     <!-- ================= 依赖版本管理 ================= -->
@@ -91,7 +93,7 @@
                 <version>${hutool.version}</version>
             </dependency>
 
-            <!-- ===== Lombok (虽然Boot管理了，但这里强制指定版本也没问题) ===== -->
+            <!-- ===== Lombok ===== -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -112,6 +114,7 @@
 
     <!-- ================= 构建插件版本管理 ================= -->
     <build>
+        <!-- 1. 这里是管理插件版本和默认配置，不会直接运行 -->
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -144,6 +147,19 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <!-- 2. 这里是真正应用到当前 POM (父工程) 的插件 -->
+        <plugins>
+            <!-- 核心修改：显式配置父工程跳过 Spring Boot 运行 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- 极其重要：告诉 Maven 这个父工程没有 Main 方法，不要运行它 -->
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

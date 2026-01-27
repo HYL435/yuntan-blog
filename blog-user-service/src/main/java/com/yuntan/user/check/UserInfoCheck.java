@@ -17,7 +17,7 @@ public class UserInfoCheck {
         if (!StringUtils.hasText(user.getUsername()) ||
                 !StringUtils.hasText(user.getPassword()) ||
                 !StringUtils.hasText(user.getEmail())) {
-            return false;
+            throw BusinessException.badRequest(MessageConstant.USER_INFO_INCOMPLETE);
         }
 
         String username = user.getUsername().trim();

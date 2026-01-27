@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuntan.article.mapper.ArticleMapper">
+
+<!--    根据标签或分类分页查询文章-->
+    <select id="selectArticleWithCategory"
+            resultType="com.yuntan.article.domain.vo.front.ArticleExhibitFrontVO">
+        SELECT DISTINCT
+        a.*
+        FROM article a
+        LEFT JOIN article_category ac ON a.id = ac.article_id
+        LEFT JOIN article_tag at ON a.id = at.article_id
+        WHERE a.status = 1
+
+        <if test="categoryId != null">
+            AND ac.category_id = #{categoryId}
+        </if>
+
+        <if test="tagId != null">
+            AND at.tag_id = #{tagId}
+        </if>
+
+        ORDER BY a.is_top DESC, a.publish_time DESC
+    </select>
+
+</mapper>

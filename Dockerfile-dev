@@ -1,0 +1,26 @@
+# 根目录下的 Dockerfile-dev
+# 直接使用包含 Maven 和 JDK 21 的官方镜像作为开发环境
+FROM maven:3.9.12-eclipse-temurin-21
+
+WORKDIR /app
+
+# 配置国内 Maven 阿里云镜像源（加速下载，可选）
+RUN mkdir -p /root/.m2 \
+    && echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" \
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
+      xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd"> \
+      <mirrors> \
+        <mirror> \
+          <id>aliyunmaven</id> \
+          <mirrorOf>*</mirrorOf> \
+          <name>阿里云公共仓库</name> \
+          <url>https://maven.aliyun.com/repository/public</url> \
+        </mirror> \
+      </mirrors> \
+    </settings>' > /root/.m2/settings.xml
+
+# 暴露端口（可以通过 docker-compose 覆盖，这里写个通用的）
+EXPOSE 8081 8082 9000
+
+# 默认命令：保持容器运行，实际启动命令在 docker-compose 中指定
+CMD ["mvn", "spring-boot:run"]

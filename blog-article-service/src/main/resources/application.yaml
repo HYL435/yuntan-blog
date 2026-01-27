@@ -1,8 +1,8 @@
 server:
-  port: 8081
+  port: 8082
 spring:
   application:
-    name: blog-user-service
+    name: blog-article-service
   profiles:
     active: local  # 激活的配置文件
   mvc:
@@ -39,26 +39,14 @@ spring:
       password: 766498
 api:
   info:
-    title: 云坛博客用户服务API
-    description: "云坛博客用户服务API接口文档"
+    title: 云坛博客文章服务API
+    description: "云坛博客文章服务API接口文档"
     version: v1.0.0
     contact-name: 苜玥
     contact-email: 2929028544@qq.com
     contact-url: https://www.yuntan.com
   packages-to-scan:
-    front: com.yuntan.user.controller.front
-    admin: com.yuntan.user.controller.admin
-# JWT认证配置（极简版：仅登录认证，无角色鉴权）
-yuntan:
-  jwt:
-    location: classpath:yuntan.jks       # JKS密钥文件路径
-    alias: yuntan                        # JKS密钥库别名
-    password: 766498                     # 改为你指定的密码 766498
-    token-ttl: 10800000                  # 令牌有效期（3小时）
-    refresh-ttl: 604800000               # 刷新令牌有效期（7天）
-    issuer: yuntan-blog                  # JWT签发者
-    subject: blog-user-service           # JWT主题
-    header: Authorization                # JWT请求头名称
-    prefix: Bearer                       # JWT令牌前缀
+    front: com.yuntan.article.controller.front
+    admin: com.yuntan.article.controller.admin
 
 

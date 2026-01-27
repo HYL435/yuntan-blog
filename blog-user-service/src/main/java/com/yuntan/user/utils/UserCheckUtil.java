@@ -30,7 +30,7 @@ public class UserCheckUtil {
     public void userRegisterChack(User user) {
         // 1. 参数基础校验
         if (!UserInfoCheck.validateRegisterUser(user)) {
-            throw BusinessException.badRequest(MessageConstant.USER_INFO_INCOMPLETE);
+            throw BusinessException.badRequest(MessageConstant.USER_INFO_FORMAT_ERROR);
         }
 
         // 2. 密码强度验证

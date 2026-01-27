@@ -17,7 +17,7 @@ import java.util.List;
 @Schema(description = "分页查询条件")
 public class PageQuery {
 
-    public static final Integer DEFAULT_PAGE_SIZE = 20;
+    public static final Integer DEFAULT_PAGE_SIZE = 10;
     public static final Integer DEFAULT_PAGE_NUM = 1;
 
     // 防止SQL注入的正则：只允许字母、数字、下划线

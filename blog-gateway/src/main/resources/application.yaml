@@ -24,12 +24,20 @@ spring:
           enabled: false  # 开启服务发现，支持通过服务名转发
           lower-case-service-id: true  # 服务名小写
       routes:
-        # 示例：用户服务路由规则
+        # 用户服务路由规则
         - id: blog-user-service-route
           uri: lb://blog-user-service  # 转发到Nacos中的blog-user-service服务
           predicates:
             # 多个路径用逗号分隔 → 网关解析为“或”逻辑
             - Path=/front/users/**,/admin/users/**
+          filters:
+            - StripPrefix=0
+        # 文章服务路由规则
+        - id: blog-article-service-route
+          uri: lb://blog-article-service  # 转发到Nacos中的blog-article-service服务
+          predicates:
+            # 多个路径用逗号分隔 → 网关解析为“或”逻辑
+            - Path=/front/articles/**,/admin/articles/**
           filters:
             - StripPrefix=0
     nacos:
@@ -68,7 +76,9 @@ management:
         include: gateway,health  # 明确暴露gateway和health端点
   endpoint:
     gateway:
-      enabled: true  # 强制开启gateway端点
+      web:
+        exposure:
+          include: gateway  # 暴露 gateway 端点
     health:
       show-details: always
 
@@ -96,3 +106,5 @@ yuntan:
       - /actuator/**
       # 补充：添加网关健康检查路径
       - /health/**
+      # 文章相关路径
+      - /front/articles/**

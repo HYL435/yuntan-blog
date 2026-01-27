@@ -52,4 +52,8 @@ public class MessageConstant {
     public static final String OLD_PASSWORD_INCORRECT = "旧密码不正确";
     public static final String LOGOUT_FAILED = "登出失败";
     public static final String USER_NOT_FOUND = "用户未找到";
+    public static final String USER_INFO_FORMAT_ERROR = "用户信息格式错误";
+
+    // ==================== 文章相关 ====================
+    public static final String ARTICLE_NOT_FOUND = "没有找到相关文章";
 }

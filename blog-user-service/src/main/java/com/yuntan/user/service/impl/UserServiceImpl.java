@@ -17,6 +17,7 @@ import com.yuntan.user.service.IUserService;
 import com.yuntan.user.utils.TokenBlacklistUtil;
 import com.yuntan.user.utils.TokenResolveUtil;
 import com.yuntan.user.utils.UserCheckUtil;
+import com.yuntan.user.utils.UserOssUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -42,7 +43,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     // mapper
     private final UserMapper userMapper;
     // OSS 工具类
-    private final OssOptionUtil ossOptionUtil;
+    private final UserOssUtil userOssUtil;
     // Redis 操作模板
     private final TokenBlacklistUtil tokenBlacklistUtil;
     // token解析工具
@@ -165,9 +166,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 throw new BusinessException(MessageConstant.USER_NOT_FOUND);
             }
             // 清理oss上的原头像
-            ossOptionUtil.deleteFile(oldUser.getImage());
+            userOssUtil.deleteFile(oldUser.getImage());
             // 上传新头像
-            String image = ossOptionUtil.uploadFile(userDTO.getImageFile(), FilePathConstant.USER_AVATAR_PATH);
+            String image = userOssUtil.uploadFile(userDTO.getImageFile(), FilePathConstant.USER_AVATAR_PATH);
             // 将新头像URL存入user
             user.setImage(image);
         } catch (IOException e) {
