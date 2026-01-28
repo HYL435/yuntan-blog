@@ -1,0 +1,218 @@
+services:
+  mysql:
+    image: mysql:8.0.36
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 766498
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_HOST: '%'
+      # ⚠️ 这里定义了库名，配置文件必须和这里一致
+      MYSQL_DATABASE: nacos_config
+      MYSQL_INITDB_SKIP_TZINFO: "1"
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+      - ./conf:/etc/mysql/conf.d
+      - mysql-logs:/var/log/mysql
+    networks:
+      - yuntan-network
+    # 增加健康检查，确保 MySQL 好了再启动 Nacos
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -uroot -p766498 -e 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    command: --default-authentication-plugin=caching_sha2_password
+
+  redis:
+    image: redis:8.4
+    container_name: redis
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis-conf:/etc/redis
+    command: redis-server --requirepass 766498 --appendonly yes --bind 0.0.0.0
+    networks:
+      - yuntan-network
+
+  nacos:
+    image: nacos/nacos-server:v3.1.1
+    container_name: nacos
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # ⚠️ 必须在这里强制单机模式，否则启动脚本会忽略配置文件尝试集群启动
+      NACOS_MODE: "standalone"
+      TZ: Asia/Shanghai
+      # === 解决报错的关键点 ===
+      # Nacos 启动脚本强制要求以下变量存在，且 Token 必须是 Base64 格式
+      NACOS_AUTH_ENABLE: "true"
+      # 下面这个是Base64编码后的默认Key，专门用来骗过启动脚本检查
+      NACOS_AUTH_TOKEN: "U2VjcmV0S2V5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5"
+      NACOS_AUTH_IDENTITY_KEY: "nacos"
+      NACOS_AUTH_IDENTITY_VALUE: "nacos"
+      # 确保 Nacos 知道去哪里读配置
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+      JVM_XMN: 256m
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+      - "8080:8080"
+    volumes:
+      - nacos-logs:/home/nacos/logs
+      - nacos-data:/home/nacos/data
+      # ⚠️ 关键修正：直接挂载到目标位置，不要用 cp 命令
+      - ./nacos-conf/application.properties:/home/nacos/conf/application.properties
+    networks:
+      - yuntan-network
+    # 移除自定义 command，使用官方默认启动命令即可
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/index.html"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+#  blog-user-service:
+#    build:
+#      context: .
+#      dockerfile: /blog-user-service/Dockerfile
+#    # ports:
+#      # - "8081:8081"
+#    environment:
+#      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+#      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+#      # 【核心修复】忽略回环网卡(lo)，强制使用 Docker 网桥网络(172开头)
+#      - SPRING_CLOUD_INETUTILS_IGNORED_INTERFACES=lo.*
+#      - SPRING_CLOUD_INETUTILS_PREFERRED_NETWORKS=172.
+#
+#      # 某些版本 Nacos 需要显式开启 IP 优先
+#      - SPRING_CLOUD_NACOS_DISCOVERY_PREFER_IP_ADDRESS=true
+#    networks:
+#      - yuntan-network
+#    volumes:
+#      # 使用数据卷挂载配置文件
+#      - blog-user-service-config:/app/config/application.yml:ro
+#      # 可选：挂载日志目录
+#      - blog-user-service-logs:/app/logs
+#
+#  blog-gateway:
+#    build:
+#      context: .
+#      dockerfile: /blog-gateway/Dockerfile
+#    ports:
+#      - "9000:9000"
+#    environment:
+#      # 关键修改：将 Nacos 地址指向 docker 服务名 'nacos'
+#      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+#      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+#    networks:
+#      - yuntan-network
+#    depends_on:
+#      - blog-user-service
+#    volumes:
+#      # 使用数据卷挂载网关配置
+#      - blog-gateway-config:/app/config/application.yml:ro
+#      # 可选：挂载日志目录
+#      - blog-gateway-logs:/app/logs
+
+  blog-user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: blog-user-service
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    networks:
+      - yuntan-network
+    volumes:
+      # 挂载根目录，确保能读取到 blog-common 和父 pom
+      - ./:/app
+      # 挂载 maven 仓库缓存
+      - maven-repo:/root/.m2/repository
+    ports:
+      - "8081:8081"
+      - "35729:35729" # LiveReload
+      - "5005:5005"   # 【新增】暴露 Debug 端口，配合下方 command 中的 jvmArguments 使用
+    # 【核心修改】：先 install 安装依赖，再单独 run 服务（去掉了 -am）
+    # 注意：jvmArguments 里的引号要小心，外层双引号，内层单引号
+    command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-user-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'"
+
+  blog-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: blog-gateway
+    ports:
+      - "9000:9000"
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+    networks:
+      - yuntan-network
+    depends_on:
+      - blog-user-service
+    volumes:
+      - ./:/app
+      - maven-repo:/root/.m2/repository
+    # 【核心修改】：先 install 安装依赖，再单独 run 服务
+    command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-gateway"
+
+  blog-article-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: blog-article-service
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    networks:
+      - yuntan-network
+    volumes:
+      # 挂载根目录，确保能读取到 blog-common 和父 pom
+      - ./:/app
+      # 挂载 maven 仓库缓存
+      - maven-repo:/root/.m2/repository
+    ports:
+      - "8082:8082"  # 假设 blog-article-service 运行在 8082 端口
+      - "35730:35730" # LiveReload
+      - "5006:5006"   # 暴露 Debug 端口，配合 jvmArguments 使用
+    # 【核心修改】：先 install 安装依赖，再单独 run 服务（去掉了 -am）
+    # 注意：jvmArguments 里的引号要小心，外层双引号，内层单引号
+    command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-article-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006'"
+
+
+
+networks:
+  yuntan-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  mysql-data:
+  mysql-logs:
+  redis-data:
+  nacos-logs:
+  nacos-data:
+  blog-user-service-config:
+  blog-user-service-logs:
+  blog-gateway-config:
+  blog-gateway-logs:
+  maven-repo: # 持久化 Maven 依赖包
