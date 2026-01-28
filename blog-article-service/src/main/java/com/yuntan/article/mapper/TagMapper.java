@@ -13,4 +13,10 @@ public interface TagMapper extends BaseMapper<Tag> {
      */
     @Select("select t.tag_name from tag t join article_tag at on t.id = at.tag_id where at.article_id = #{articleId}")
     List<String> getTagsByArticleId(Long articleId);
+
+    /**
+     * 获取所有标签名称
+     */
+    @Select("select tag_name from tag where status = 1 and deleted = 0")
+    List<String> getTags();
 }

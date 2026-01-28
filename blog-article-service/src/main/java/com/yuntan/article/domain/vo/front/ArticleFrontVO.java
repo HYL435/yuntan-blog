@@ -150,6 +150,26 @@ public class ArticleFrontVO implements CategorizableVO {
     private Long viewCount;
 
     /**
+     * 是否点赞
+     */
+    @Schema(
+            description = "是否点赞",
+            example = "true",
+            defaultValue = "false"
+    )
+    private Boolean isLike;
+
+    /**
+     * 是否收藏
+     */
+    @Schema(
+            description = "是否收藏",
+            example = "true",
+            defaultValue = "false"
+    )
+    private Boolean isCollect;
+
+    /**
      * 发布时间（草稿转发布时填充，允许为空）
      */
     @Schema(

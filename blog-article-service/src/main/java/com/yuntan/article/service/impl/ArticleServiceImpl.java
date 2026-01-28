@@ -1,5 +1,6 @@
 package com.yuntan.article.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -19,6 +20,7 @@ import com.yuntan.article.enums.ArticleTopStatusEnum;
 import com.yuntan.article.mapper.*;
 import com.yuntan.article.service.IArticleService;
 import com.yuntan.common.constant.MessageConstant;
+import com.yuntan.common.context.BaseContext;
 import com.yuntan.common.domain.PageDTO;
 import com.yuntan.common.domain.PageQuery;
 import com.yuntan.common.utils.BeanUtils;
@@ -29,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -40,6 +43,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public final TagMapper tagMapper;
     public final ArticleCategoryMapper articleCategoryMapper;
     public final ArticleTagMapper articleTagMapper;
+    public final InteractMapper interactMapper;
 
     /**
      * 根据文章ID获取文章信息
@@ -59,6 +63,19 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         // 填充分类和标签
         setCategoryAndTags(articleFrontVO);
+
+        // 判断用户是否登录
+        if (Objects.nonNull(BaseContext.getCurrentId())) {
+            Long userId = BaseContext.getCurrentId();
+            // 判断用户是否点赞
+            articleFrontVO.setIsLike(interactMapper.isLike(id, userId) > 0);
+            // 判断用户是否收藏
+            articleFrontVO.setIsLike(interactMapper.isCollect(id, userId) > 0);
+        } else {
+            // 否则，设置用户是否点赞和收藏为false
+            articleFrontVO.setIsLike(false);
+            articleFrontVO.setIsCollect(false);
+        }
 
         return articleFrontVO;
     }
@@ -149,11 +166,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      * 文章置顶
      */
     @Override
-    public void articleTop(Long id) {
+    public void articleTop(Long id, Integer top) {
+
+        top = Objects.equals(top, ArticleTopStatusEnum.TOP.getValue()) ? ArticleTopStatusEnum.NOT_TOP.getValue() : ArticleTopStatusEnum.TOP.getValue();
 
         this.lambdaUpdate()
                 .eq(Article::getId, id)
-                .set(Article::getIsTop, ArticleTopStatusEnum.TOP.getValue())
+                .set(Article::getIsTop, top)
                 .update();
 
     }

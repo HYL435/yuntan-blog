@@ -1,4 +1,4 @@
-package com.yuntan.article.domain.po;
+package com.yuntan.article.domain.vo.admin;
 
 import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,11 +14,9 @@ import java.time.LocalDateTime;
  * 标签实体类
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
 @Schema(description = "标签实体")
-public class Tag implements Serializable {
+public class TagVO {
 
     /**
      * 主键ID
@@ -39,29 +37,6 @@ public class Tag implements Serializable {
     private String tagName;
 
     /**
-     * 状态：0-禁用，1-启用
-     */
-    @Schema(
-            description = "状态：0-禁用，1-启用",
-            example = "1",
-            allowableValues = {"0", "1"},
-            defaultValue = "1"
-    )
-    private Integer status;
-
-    /**
-     * 软删除：0-未删，1-已删
-     */
-    @Schema(
-            description = "软删除标记：0-未删，1-已删",
-            example = "0",
-            allowableValues = {"0", "1"},
-            defaultValue = "0"
-    )
-    @TableLogic
-    private Integer deleted;
-
-    /**
      * 创建时间
      */
     @Schema(
@@ -80,5 +55,4 @@ public class Tag implements Serializable {
     )
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-
 }

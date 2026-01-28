@@ -37,7 +37,7 @@ public interface IArticleService extends IService<Article> {
     /**
      * 文章置顶
      */
-    void articleTop(Long id);
+    void articleTop(Long id, Integer top);
 
     /**
      * 获取文章详情

@@ -39,16 +39,6 @@ public class Category implements Serializable {
     private String categoryName;
 
     /**
-     * 父分类ID，空字符串=一级分类
-     */
-    @Schema(
-            description = "父分类ID，空字符串=一级分类",
-            example = "",
-            maxLength = 20
-    )
-    private String parentId;
-
-    /**
      * 排序权重，值越大越靠前
      */
     @Schema(

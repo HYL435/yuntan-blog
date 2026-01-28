@@ -1,7 +1,7 @@
 package com.yuntan.common.interceptors;
 
 import cn.hutool.core.util.StrUtil;
-import com.yuntan.common.utils.UserContext;
+import com.yuntan.common.context.BaseContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -18,7 +18,7 @@ public class UserInfoInterceptor implements HandlerInterceptor {
         String userInfo = request.getHeader("user-info");
         // 判断是否获取了用户，如果有，存入ThreadLocal
         if (StrUtil.isNotBlank(userInfo)) {
-            UserContext.setUser(Long.valueOf(userInfo));
+            BaseContext.setCurrentId(Long.valueOf(userInfo));
         }
         // 放行
         return  true;
@@ -27,6 +27,6 @@ public class UserInfoInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         // 清理用户
-        UserContext.removeUser();
+        BaseContext.removeCurrentId();
     }
 }

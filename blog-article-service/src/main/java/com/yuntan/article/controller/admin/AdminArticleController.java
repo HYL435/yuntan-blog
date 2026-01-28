@@ -35,12 +35,12 @@ public class AdminArticleController {
     }
 
     @Operation(summary = "文章置顶")
-    @PutMapping("/top/{id}")
-    public Result<Void> articleTop(@PathVariable Long id) {
+    @PutMapping("/top")
+    public Result<Void> articleTop(Long id,  Integer top) {
 
-        log.info("文章置顶，文章ID：{}", id);
+        log.info("文章置顶，文章ID：{}，置顶状态：{}", id, top);
 
-        articleService.articleTop(id);
+        articleService.articleTop(id, top);
 
         return Result.ok();
     }

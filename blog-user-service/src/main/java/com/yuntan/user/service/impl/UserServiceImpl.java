@@ -255,6 +255,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public void enableOrDisableUser(Long id, Integer status) {
 
+        status = Objects.equals(status, StatusConstant.DISABLE) ? StatusConstant.ENABLE : StatusConstant.DISABLE;
+
+
         // 创建用户对象
         User user = User.builder()
                 .id(id)
