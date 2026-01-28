@@ -59,4 +59,10 @@ public class ArticleCategory implements Serializable {
     )
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+
+    public ArticleCategory(Long articleId, Long categoryId) {
+
+        this.articleId = articleId;
+        this.categoryId = categoryId;
+    }
 }

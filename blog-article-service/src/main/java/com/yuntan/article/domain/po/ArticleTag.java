@@ -59,4 +59,9 @@ public class ArticleTag implements Serializable {
     )
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+
+    public ArticleTag(Long articleId, Long tagId) {
+        this.articleId = articleId;
+        this.tagId = tagId;
+    }
 }

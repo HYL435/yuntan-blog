@@ -1,2 +1,3 @@
 com.yuntan.common.config.OssAutoConfiguration
 com.yuntan.common.config.OssProperties
+com.yuntan.common.config.MyBatisConfig
