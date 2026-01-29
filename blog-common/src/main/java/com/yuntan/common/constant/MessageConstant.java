@@ -56,4 +56,5 @@ public class MessageConstant {
 
     // ==================== 文章相关 ====================
     public static final String ARTICLE_NOT_FOUND = "没有找到相关文章";
+    public static final String MONGODB_SAVE_ERROR = "文章正文保存失败";
 }

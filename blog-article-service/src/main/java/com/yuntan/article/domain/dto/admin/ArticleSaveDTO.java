@@ -40,6 +40,15 @@ public class ArticleSaveDTO {
     private String content;
 
     /**
+     * MongoDB 文章正文id
+     */
+    @Schema(
+            description = "MongoDB 文章正文id",
+            example = "5f9a1b9b0f9a1b9b0f9a1b9b"
+    )
+    private String mongoId;
+
+    /**
      * 文章封面图URL
      */
     @Schema(

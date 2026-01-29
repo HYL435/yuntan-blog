@@ -12,4 +12,9 @@ public interface InteractService {
      * 添加文章收藏
      */
     void collect(Long articleId);
+
+    /**
+     * 浏览文章
+     */
+    void view(Long articleId);
 }

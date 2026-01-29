@@ -19,4 +19,10 @@ public interface CategoryMapper extends BaseMapper<Category> {
      */
     @Select("select category_name from category where status = 1 and deleted = 0 order by sort desc")
     List<String> getCategories();
+
+    /**
+     * 获取所有分类ID
+     */
+    @Select("select id from category where status = 1 and deleted = 0 order by sort desc")
+    List<Integer> selectAllCategoryIds();
 }

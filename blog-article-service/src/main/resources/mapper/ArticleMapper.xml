@@ -3,7 +3,44 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yuntan.article.mapper.ArticleMapper">
 
-<!--    根据标签或分类分页查询文章-->
+    <!-- 批量更新互动数据 -->
+    <update id="updateInteractBatch">
+        update article
+        <trim prefix="SET" suffixOverrides=",">
+            <!-- 更新阅读量: 如果DTO里是null(Redis里没存)，保持数据库原值(id=id) -->
+            <trim prefix="view_count = CASE" suffix="END,">
+                <foreach collection="list" item="item">
+                    <if test="item.viewCount != null">
+                        WHEN id = #{item.id} THEN #{item.viewCount}
+                    </if>
+                </foreach>
+            </trim>
+
+            <!-- 更新点赞数 -->
+            <trim prefix="like_count = CASE" suffix="END,">
+                <foreach collection="list" item="item">
+                    <if test="item.likeCount != null">
+                        WHEN id = #{item.id} THEN #{item.likeCount}
+                    </if>
+                </foreach>
+            </trim>
+
+            <!-- 更新收藏数 -->
+            <trim prefix="collect_count = CASE" suffix="END,">
+                <foreach collection="list" item="item">
+                    <if test="item.collectCount != null">
+                        WHEN id = #{item.id} THEN #{item.collectCount}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE id IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <!--    根据标签或分类分页查询文章-->
     <select id="selectArticleWithCategory"
             resultType="com.yuntan.article.domain.vo.front.ArticleExhibitFrontVO">
         SELECT DISTINCT

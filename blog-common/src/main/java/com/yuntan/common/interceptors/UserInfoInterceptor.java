@@ -18,7 +18,7 @@ public class UserInfoInterceptor implements HandlerInterceptor {
         String userInfo = request.getHeader("user-info");
         // 判断是否获取了用户，如果有，存入ThreadLocal
         if (StrUtil.isNotBlank(userInfo)) {
-            BaseContext.setCurrentId(Long.valueOf(userInfo));
+            BaseContext.setUserId(Long.valueOf(userInfo));
         }
         // 放行
         return  true;
@@ -27,6 +27,6 @@ public class UserInfoInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         // 清理用户
-        BaseContext.removeCurrentId();
+        BaseContext.remove();
     }
 }

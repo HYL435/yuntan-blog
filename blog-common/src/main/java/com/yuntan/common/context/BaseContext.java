@@ -1,19 +1,31 @@
 package com.yuntan.common.context;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 public class BaseContext {
 
-    public static ThreadLocal<Long> threadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<HttpServletRequest> REQUEST_HOLDER = new ThreadLocal<>();
+    private static final ThreadLocal<Long> USER_ID_HOLDER = new ThreadLocal<>();
 
-    public static void setCurrentId(Long id) {
-        threadLocal.set(id);
+    public static void setRequest(HttpServletRequest request) {
+        REQUEST_HOLDER.set(request);
     }
 
-    public static Long getCurrentId() {
-        return threadLocal.get();
+    public static HttpServletRequest getRequest() {
+        return REQUEST_HOLDER.get();
     }
 
-    public static void removeCurrentId() {
-        threadLocal.remove();
+    public static void setUserId(Long userId) {
+        USER_ID_HOLDER.set(userId);
+    }
+
+    public static Long getUserId() {
+        return USER_ID_HOLDER.get();
+    }
+
+    public static void remove() {
+        REQUEST_HOLDER.remove();
+        USER_ID_HOLDER.remove();
     }
 
 }

@@ -94,3 +94,4 @@ yuntan:
       - /front/articles/**
       - /front/categories/**
       - /front/tags/**
+      - /front/interacts/view/**

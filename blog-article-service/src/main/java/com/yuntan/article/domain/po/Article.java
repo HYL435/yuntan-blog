@@ -59,14 +59,13 @@ public class Article implements Serializable {
     private String summary;
 
     /**
-     * 文章正文（支持Markdown/HTML）
+     * MongoDB 文章正文id
      */
     @Schema(
-            description = "文章正文",
-            example = "# Spring Boot介绍...",
-            requiredMode = Schema.RequiredMode.REQUIRED
+            description = "MongoDB 文章正文id",
+            example = "5f9a1b9b0f9a1b9b0f9a1b9b"
     )
-    private String content;
+    private String mongoId;
 
     /**
      * 文章封面图URL

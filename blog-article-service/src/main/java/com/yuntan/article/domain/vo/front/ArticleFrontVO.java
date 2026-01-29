@@ -28,6 +28,15 @@ public class ArticleFrontVO implements CategorizableVO {
     private Long id;
 
     /**
+     * MongoDB 文章正文id
+     */
+    @Schema(
+            description = "MongoDB 文章正文id",
+            example = "5f9a1b9b0f9a1b9b0f9a1b9b"
+    )
+    private String mongoId;
+
+    /**
      * 文章标题
      */
     @Schema(

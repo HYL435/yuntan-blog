@@ -43,6 +43,26 @@ services:
     networks:
       - yuntan-network
 
+  mongo:
+    image: mongo:8.2.4
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 766498
+      TZ: Asia/Shanghai
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+      - ./mongo-conf:/etc/mongo
+    # 删除 mcp 的命令，改为 mongod 启动
+    command: ["mongod", "--auth", "--bind_ip", "0.0.0.0", "--port", "27017"]
+    networks:
+      - yuntan-network
+
+
   nacos:
     image: nacos/nacos-server:v3.1.1
     container_name: nacos
@@ -196,6 +216,29 @@ services:
     # 注意：jvmArguments 里的引号要小心，外层双引号，内层单引号
     command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-article-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006'"
 
+  blog-comment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: blog-comment-service
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    networks:
+      - yuntan-network
+    volumes:
+      # 挂载根目录，确保能读取到 blog-common 和父 pom
+      - ./:/app
+      # 挂载 maven 仓库缓存
+      - maven-repo:/root/.m2/repository
+    ports:
+      - "8083:8083"   # 【端口顺延】假设评论服务运行在 8083
+      - "35731:35731" # 【LiveReload顺延】
+      - "5007:5007"   # 【Debug端口顺延】配合下方 command 中的 address=*:5007 使用
+    # 【核心修改】：先 install 安装依赖，再单独 run 服务
+    # 注意：这里 -pl 指向 blog-comment-service，debug 端口改为 5007
+    command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-comment-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007'"
 
 
 networks:
@@ -216,3 +259,4 @@ volumes:
   blog-gateway-config:
   blog-gateway-logs:
   maven-repo: # 持久化 Maven 依赖包
+  mongo-data:

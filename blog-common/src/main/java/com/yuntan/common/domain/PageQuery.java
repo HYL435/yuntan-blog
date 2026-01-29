@@ -135,4 +135,8 @@ public class PageQuery {
         }
         return sb.toString();
     }
+
+    public Long getCategoryId(){
+        return null;
+    };
 }

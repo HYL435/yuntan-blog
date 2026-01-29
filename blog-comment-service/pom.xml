@@ -10,9 +10,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blog-article-service</artifactId>
-    <name>blog-article-service</name>
-    <description>文章服务模块</description>
+    <artifactId>blog-comment-service</artifactId>
+    <name>blog-comment-service</name>
+    <description>评论服务模块</description>
 
     <properties>
         <java.version>21</java.version>

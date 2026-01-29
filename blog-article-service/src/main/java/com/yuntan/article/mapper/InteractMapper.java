@@ -2,6 +2,8 @@ package com.yuntan.article.mapper;
 
 import com.yuntan.article.domain.po.ArticleCollect;
 import com.yuntan.article.domain.po.ArticleLike;
+import com.yuntan.article.domain.po.ArticleView;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
@@ -30,4 +32,22 @@ public interface InteractMapper {
      */
     @Insert("insert into article_collect (user_id, article_id, create_time) values (#{userId}, #{articleId}, #{createTime})")
     void collect(ArticleCollect collect);
+
+    /**
+     * 删除文章收藏
+     */
+    @Delete("delete from article_collect where article_id = #{articleId} and user_id = #{currentId}")
+    void deleteCollect(Long articleId, Long currentId);
+
+    /**
+     * 删除文章点赞
+     */
+    @Delete("delete from article_like where article_id = #{articleId} and user_id = #{currentId}")
+    void deleteLike(Long articleId, Long currentId);
+
+    /**
+     * 添加文章浏览
+     */
+    @Insert("insert into article_view (user_id, article_id, ip, create_time) values (#{userId}, #{articleId},#{ip}, #{createTime})")
+    void addView(ArticleView view);
 }

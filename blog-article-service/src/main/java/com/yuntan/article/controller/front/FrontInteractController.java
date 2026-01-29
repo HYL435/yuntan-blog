@@ -43,4 +43,15 @@ public class FrontInteractController {
         return Result.ok();
     }
 
+    @Operation(summary = "文章浏览量")
+    @PostMapping("/view/{articleId}")
+    public Result<Void> view(@PathVariable Long articleId) {
+
+        log.info("浏览量");
+
+        interactService.view(articleId);
+
+        return Result.ok();
+    }
+
 }

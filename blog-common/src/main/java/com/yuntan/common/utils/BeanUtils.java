@@ -1,8 +1,11 @@
 package com.yuntan.common.utils;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -55,5 +58,19 @@ public class BeanUtils extends BeanUtil {
             return CollUtils.emptyList();
         }
         return list.stream().map(r -> copyBean(r, clazz, convert)).collect(Collectors.toList());
+    }
+
+    public static <R, T> T mapToBean(R source, Class<T> clazz) {
+        if (source == null) {
+            return null;
+        }
+        return BeanUtil.toBean(source, clazz);
+    }
+
+    public static <R> Map<String, Object> dtoToMap(R source) {
+        if (source == null) {
+            return null;
+        }
+        return beanToMap(source);
     }
 }
