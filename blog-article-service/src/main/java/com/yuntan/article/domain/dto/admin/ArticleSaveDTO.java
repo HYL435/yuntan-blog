@@ -2,6 +2,8 @@ package com.yuntan.article.domain.dto.admin;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 
@@ -56,7 +58,7 @@ public class ArticleSaveDTO {
             example = "https://example.com/cover.jpg",
             maxLength = 500
     )
-    private String coverImg;
+    private MultipartFile imageFile;
 
     /**
      * 文章关键词（SEO用）

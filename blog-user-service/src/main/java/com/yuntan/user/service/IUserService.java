@@ -53,4 +53,9 @@ public interface IUserService extends IService<User> {
      * 升级用户为管理员
      */
     void upgradeAdmin(Long id);
+
+    /**
+     * 获取用户评论
+     */
+    UserCommentDTO getUserComment(Long id);
 }

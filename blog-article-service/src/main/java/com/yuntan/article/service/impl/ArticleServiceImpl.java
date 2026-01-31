@@ -21,6 +21,9 @@ import com.yuntan.article.enums.ArticleStatusEnum;
 import com.yuntan.article.enums.ArticleTopStatusEnum;
 import com.yuntan.article.mapper.*;
 import com.yuntan.article.service.IArticleService;
+import com.yuntan.article.utils.ArticleOssUtil;
+import com.yuntan.common.constant.DefaultImageURLConstant;
+import com.yuntan.common.constant.FilePathConstant;
 import com.yuntan.common.constant.MessageConstant;
 import com.yuntan.common.context.BaseContext;
 import com.yuntan.common.domain.PageDTO;
@@ -37,6 +40,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +59,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public final ArticleCategoryMapper articleCategoryMapper;
     public final ArticleTagMapper articleTagMapper;
     public final InteractMapper interactMapper;
+
+    public final ArticleOssUtil articleOssUtil;
 
     public final StringRedisTemplate redisTemplate;
     private final MongoTemplate mongoTemplate;
@@ -381,8 +387,34 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 将文章内容存储到数据库中
         // 判断文章是否存在，存在则更新，否则插入
         if (article.getId() == null) {
+            // 判断图片文件是否为空，如果不为空，则上传图片，如果为空，则使用默认图片
+            if (articleSaveDTO.getImageFile() != null) {
+                try {
+                    String image = articleOssUtil.uploadFile(articleSaveDTO.getImageFile(), FilePathConstant.ARTICLE_COVER_PATH);
+                    article.setCoverImg(image);
+                } catch (IOException e) {
+                    throw new BusinessException(MessageConstant.UPLOAD_FAILED);
+                }
+            } else {
+                article.setCoverImg(DefaultImageURLConstant.DEFAULT_BLOG_COVER_URL);
+            }
             this.save(article);
         } else {
+            try {
+                Article byId = this.getById(article.getId());
+                if (byId == null) {
+                    throw new BusinessException(MessageConstant.ARTICLE_NOT_FOUND);
+                }
+                if (byId.getCoverImg() != null) {
+                    // 先删除原来的图片
+                    articleOssUtil.deleteFile(byId.getCoverImg());
+                }
+                // 将新的图片上传到OSS中
+                String image = articleOssUtil.uploadFile(articleSaveDTO.getImageFile(), FilePathConstant.ARTICLE_COVER_PATH);
+                article.setCoverImg(image);
+            } catch (IOException e) {
+                throw new BusinessException(MessageConstant.UPLOAD_FAILED);
+            }
             this.updateById(article);
         }
         // 获取文章id

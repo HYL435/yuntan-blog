@@ -3,7 +3,7 @@ yuntan:
     # MySQL 基础连接配置
     host: mysql
     port: 3306
-    name: blog-article
+    name: blog-comment
     username: root
     pw: 766498
 

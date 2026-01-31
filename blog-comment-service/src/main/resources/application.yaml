@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8083
 spring:
   application:
     name: blog-comment-service
@@ -41,14 +41,18 @@ spring:
       password: 766498
 api:
   info:
-    title: 云坛博客文章服务API
-    description: "云坛博客文章服务API接口文档"
+    title: 云坛博客评论服务API
+    description: "云坛博客评论服务API接口文档"
     version: v1.0.0
     contact-name: 苜玥
     contact-email: 2929028544@qq.com
     contact-url: https://www.yuntan.com
   packages-to-scan:
-    front: com.yuntan.article.controller.front
-    admin: com.yuntan.article.controller.admin
+    front: com.yuntan.comment.controller.front
+    admin: com.yuntan.comment.controller.admin
+
+# application.yml
+amap:
+  key: 	b21bf1b1e058415dd060f96eeebe4d3a # 替换成你的高德 Key
 
 

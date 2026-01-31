@@ -93,4 +93,15 @@ public class FrontUserController {
 
         return Result.ok();
     }
+
+    @Operation(summary = "获取用户评论信息", description = "获取用户评论信息")
+    @GetMapping("/comment/{id}")
+    public Result<UserCommentDTO> getUserComment(@PathVariable Long id) {
+
+        log.info("获取评论用户信息");
+
+        UserCommentDTO userComment = userService.getUserComment(id);
+
+        return Result.ok(userComment);
+    }
 }

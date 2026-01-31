@@ -17,6 +17,10 @@ public class FilePathConstant {
      * 文章附带图片存储路径
      */
     public static final String ARTICLE_IMAGE_PATH = "image/article";
+    /**
+     * 评论图片存储路径
+     */
+    public static final String COMMENT_IMAGE_PATH = "image/comment";
 
 
 }

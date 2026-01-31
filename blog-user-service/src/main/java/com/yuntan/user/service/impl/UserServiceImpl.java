@@ -286,6 +286,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     }
 
+    /**
+     * 获取用户评论
+     */
+    @Override
+    public UserCommentDTO getUserComment(Long id) {
+
+        User user = this.getById(id);
+
+        return BeanUtils.copyBean(user, UserCommentDTO.class);
+    }
+
     // 根据用户名或邮箱查询用户
     private UserLoginVO selectUserByInfo(User user) {
         String usernameOrEmail = StringUtils.hasText(user.getUsername())

@@ -9,7 +9,7 @@ import java.io.IOException;
 
 // 并创建一个过滤器来设置请求上下文
 @Component
-public class RequestContextFilter implements Filter {
+public class CustomRequestContextFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
