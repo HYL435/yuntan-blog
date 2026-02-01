@@ -1,10 +1,23 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import DarkButton from "@/components/common/DarkButton.vue";
+import LoginButton from "@/components/common/LoginButton.vue";
 
 // 状态管理
 const showTransparentHeader = ref(true); // 控制透明导航显示
 const showStickyHeader = ref(false);     // 控制白色悬浮导航显示
 const isMenuOpen = ref(false);
+const isDarkMode = ref(false);           // 控制深色模式
+
+// 处理深色模式切换
+const handleDarkModeChange = (isDark) => {
+  isDarkMode.value = isDark;
+  if (isDark) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+};
 
 const handleScroll = () => {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -16,7 +29,7 @@ const handleScroll = () => {
 
   // 2. 白色导航逻辑
   // 阈值设为 180px，保证两者之间有足够的时间差，不会重叠
-  showStickyHeader.value = scrollTop > 180;
+  showStickyHeader.value = scrollTop > 200;
 };
 
 const toggleMenu = () => {
@@ -29,10 +42,10 @@ const toggleMenu = () => {
 };
 
 const navLinks = [
-  { name: "Home", href: "#super_container" },
-  { name: "About", href: "#about" },
-  { name: "Work", href: "#work" },
-  { name: "Contact", href: "#contact" },
+  { name: "文章", href: "#super_container" },
+  { name: "关于", href: "#about" },
+  { name: "工作", href: "#work" },
+  { name: "联系", href: "#contact" },
 ];
 
 onMounted(() => {
@@ -81,7 +94,7 @@ onUnmounted(() => {
             <span
               class="font-display text-2xl font-extrabold tracking-tighter uppercase text-white"
             >
-              Squareform
+              云 坛
             </span>
           </a>
 
@@ -102,11 +115,12 @@ onUnmounted(() => {
                 </li>
               </ul>
             </nav>
-            <a
-              href="#"
-              class="bg-white text-brand-black px-6 py-2.5 rounded-full font-medium hover:bg-gray-100 transition-all transform hover:scale-105"
-            >
-              Get Started
+            <!-- 暗黑模式切换按钮 -->
+            <DarkButton />
+            
+            <!-- 登录按钮 -->
+            <a href="#">
+              <LoginButton />
             </a>
           </div>
 
@@ -156,7 +170,7 @@ onUnmounted(() => {
             <span
               class="font-display text-2xl font-extrabold tracking-tighter uppercase text-brand-black"
             >
-              Squareform
+              云 坛
             </span>
           </a>
 
@@ -177,11 +191,12 @@ onUnmounted(() => {
                 </li>
               </ul>
             </nav>
-            <a
-              href="#"
-              class="bg-brand-black text-white px-6 py-2.5 rounded-full font-medium hover:bg-gray-800 transition-all transform hover:scale-105"
-            >
-              Get Started
+            <!-- 暗黑模式切换按钮 -->
+            <DarkButton />
+
+            <!-- 登录按钮 -->
+            <a href="#">
+              <LoginButton />
             </a>
           </div>
 
@@ -231,12 +246,11 @@ onUnmounted(() => {
             </a>
           </li>
         </ul>
-        <a
-          href="#"
-          class="bg-white text-brand-black px-8 py-3 rounded-full text-lg font-medium hover:bg-gray-200 transition-colors"
-        >
-          Get Started
-        </a>
+
+        <!-- 登录按钮 -->
+            <a href="#">
+              <LoginButton />
+            </a>
       </div>
     </div>
   </div>

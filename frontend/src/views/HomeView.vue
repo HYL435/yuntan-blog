@@ -1,5 +1,5 @@
 <template>
-  <div class= "h-1250 bg-green-100"> 
+  <div class= "h-1250 bg-my-header-bg"> 
   
   </div>
 </template>
