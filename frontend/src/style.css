@@ -47,6 +47,8 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  outline: none !important;
+  border: 0;
 }
 button:hover {
   border-color: #646cff;
@@ -76,4 +78,92 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* 深色模式 - 全局样式 */
+html.dark,
+html.dark-mode {
+  color-scheme: dark;
+}
+
+html.dark .grid-wrapper {
+  background: #000000 !important;
+}
+
+/* 深色模式下的网格线条 - 红色，中心清晰向外消失 */
+html.dark .grid-background {
+  background-image: 
+    linear-gradient(to right, rgba(229, 34, 78, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(229, 34, 78, 0.3) 1px, transparent 1px) !important;
+  background-size: 80px 80px !important;
+  
+  /* 网格消失效果 - 缩小显示范围 */
+  -webkit-mask-image: radial-gradient(
+    ellipse 60% 60% at 50% 20%,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.3) 40%,
+    transparent 70%
+  ) !important;
+  mask-image: radial-gradient(
+    ellipse 60% 60% at 50% 20%,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.3) 40%,
+    transparent 70%
+  ) !important;
+}
+
+/* 深色模式下拉框：纯黑背景 + 红色边框光效 */
+html.dark .nav-dropdown-card {
+  background: #000000 !important;
+  border: 1px solid rgba(229, 34, 78, 0.35) !important;
+  box-shadow: 
+    0px 6px 30px rgba(229, 34, 78, 0.3),
+    0px 0px 0px 1px rgba(229, 34, 78, 0.25) !important;
+}
+
+/* 深色模式内容区：纯黑背景，无模糊 */
+html.dark .card-content {
+  background: #000000 !important;
+  backdrop-filter: none !important;
+}
+
+/* 深色模式旋转光效：红色渐变 */
+html.dark .nav-dropdown-card::before {
+  width: 180% !important;
+  height: 180% !important;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(229, 34, 78, 0.4) 80deg,
+    rgba(229, 34, 78, 0.9) 140deg,
+    rgba(229, 34, 78, 0.4) 200deg,
+    transparent 280deg,
+    transparent 360deg
+  ) !important;
+}
+
+/* 深色模式下的白色导航栏 - 纯黑 + 红色强调 */
+html.dark header[class*="bg-white"] {
+  background: #000000 !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 8px 32px rgba(229, 34, 78, 0.2), inset 0 1px 0 rgba(229, 34, 78, 0.15) !important;
+  border-bottom: 1px solid rgba(229, 34, 78, 0.2) !important;
+}
+
+html.dark header[class*="bg-white"] a,
+html.dark header[class*="bg-white"] span {
+  color: #e2e8f0 !important;
+}
+
+/* 深色模式导航栏 - hover红色下划线 */
+html.dark header[class*="bg-white"] span.absolute {
+  background: #E5224E !important;
+}
+
+html.dark header[class*="bg-white"] .text-black {
+  color: #e2e8f0 !important;
+}
+
+html.dark header[class*="bg-white"] .text-gray-600:hover {
+  color: #cbd5e1 !important;
 }

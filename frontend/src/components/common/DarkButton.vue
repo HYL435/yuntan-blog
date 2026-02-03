@@ -8,9 +8,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
 const isDark = ref(false)
+
+onMounted(() => {
+  // 初始化：检查本地存储或系统设置
+  const saved = localStorage.getItem('dark-mode')
+  if (saved !== null) {
+    isDark.value = saved === 'true'
+  } else {
+    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  applyDarkMode()
+})
+
+const applyDarkMode = () => {
+  const html = document.documentElement
+  if (!isDark.value) {
+    html.classList.add('dark')
+    html.classList.add('dark-mode')
+  } else {
+    html.classList.remove('dark')
+    html.classList.remove('dark-mode')
+  }
+  localStorage.setItem('dark-mode', String(!isDark.value))
+}
+
+watch(isDark, () => {
+  applyDarkMode()
+})
 </script>
 
 <style scoped>
