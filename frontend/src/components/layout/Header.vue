@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import OptionButton from "@/components/common/OptionButton.vue";
 import DarkButton from "@/components/common/DarkButton.vue";
 import LoginButton from "@/components/common/LoginButton.vue";
+import BackTopButton from "@/components/common/BackTopButton.vue";
 
 const showTransparentHeader = ref(true);
 const showStickyHeader = ref(false);
@@ -111,6 +112,9 @@ onUnmounted(() => {
                 </li>
               </ul>
             </nav>
+
+            <BackTopButton />
+
             <LoginButton />
           </div>
           <button @click="toggleMenu" class="md:hidden text-black">菜单</button>

@@ -9,7 +9,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -30,6 +30,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #ffffff;
 }
 
 h1 {
@@ -86,6 +87,11 @@ html.dark-mode {
   color-scheme: dark;
 }
 
+html.dark body,
+html.dark-mode body {
+  background-color: #000000;
+}
+
 html.dark .grid-wrapper {
   background: #000000 !important;
 }
@@ -97,18 +103,20 @@ html.dark .grid-background {
     linear-gradient(to bottom, rgba(229, 34, 78, 0.3) 1px, transparent 1px) !important;
   background-size: 80px 80px !important;
   
-  /* 网格消失效果 - 缩小显示范围 */
+  /* 网格消失效果 - 上方和四周都有淡出效果 */
   -webkit-mask-image: radial-gradient(
-    ellipse 60% 60% at 50% 20%,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.3) 40%,
-    transparent 70%
+    ellipse 70% 75% at 50% 35%,
+    rgba(0,0,0,1) 10%,
+    rgba(0,0,0,0.8) 35%,
+    rgba(0,0,0,0.3) 55%,
+    transparent 75%
   ) !important;
   mask-image: radial-gradient(
-    ellipse 60% 60% at 50% 20%,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.3) 40%,
-    transparent 70%
+    ellipse 70% 75% at 50% 35%,
+    rgba(0,0,0,1) 10%,
+    rgba(0,0,0,0.8) 35%,
+    rgba(0,0,0,0.3) 55%,
+    transparent 75%
   ) !important;
 }
 
@@ -166,4 +174,10 @@ html.dark header[class*="bg-white"] .text-black {
 
 html.dark header[class*="bg-white"] .text-gray-600:hover {
   color: #cbd5e1 !important;
+}
+
+/* 深色模式下的内容卡片 - 禁用边框 */
+html.dark .bottom-card {
+  border: none !important;
+  box-shadow: none !important;
 }

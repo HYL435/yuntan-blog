@@ -33,8 +33,11 @@
    使用 linear-gradient 绘制 1px 的线
    ========================================= */
 .grid-background {
-  position: absolute;
-  inset: 0; /* top/right/bottom/left: 0 的简写 */
+  position: fixed;
+  top: 100px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 0;
   
   /* 
@@ -51,19 +54,21 @@
 
   /* 
     蒙版：让网格在中间清晰，向四周淡出 
-    radial-gradient 从中心向外扩散
+    radial-gradient 从中心向外扩散，同时在顶部也有淡出效果
   */
   -webkit-mask-image: radial-gradient(
-    ellipse 80% 80% at 50% 20%,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.4) 50%,
-    transparent 80%
+    ellipse 70% 75% at 50% 35%,
+    rgba(0,0,0,1) 10%,
+    rgba(0,0,0,0.8) 35%,
+    rgba(0,0,0,0.3) 55%,
+    transparent 75%
   );
   mask-image: radial-gradient(
-    ellipse 80% 80% at 50% 20%,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.4) 50%,
-    transparent 80%
+    ellipse 70% 75% at 50% 35%,
+    rgba(0,0,0,1) 10%,
+    rgba(0,0,0,0.8) 35%,
+    rgba(0,0,0,0.3) 55%,
+    transparent 75%
   );
   
   pointer-events: none; /* 防止遮挡点击 */
