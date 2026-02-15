@@ -125,6 +125,19 @@ const handleTagClick = (tag: string) => {
 </script>
 
 <style scoped>
+/* 深色模式变量定义 */
+:global(html.dark) {
+  --primary-color: #BE1C41;
+}
+
+:global(html.light) {
+  --primary-color: #06b6d4;
+}
+
+:global(html):not(.dark) {
+  --primary-color: #06b6d4;
+}
+
 /* 容器主样式 */
 .main {
   display: flex;
@@ -136,7 +149,7 @@ const handleTagClick = (tag: string) => {
 }
 
 :global(html.dark) .main {
-  color: #e5e7eb;
+  color: var(--text-primary);
 }
 
 /* ================== 顶部图片区域 ================== */
@@ -221,6 +234,10 @@ const handleTagClick = (tag: string) => {
   background: linear-gradient(135deg, #48dbfb, #0abde3);
 }
 
+:global(html.dark) .badge.original {
+  background: linear-gradient(135deg, #BE1C41, #a01535) !important;
+}
+
 .badge.reprint {
   background: linear-gradient(135deg, #a5b1c2, #778ca3);
 }
@@ -250,11 +267,15 @@ const handleTagClick = (tag: string) => {
 }
 
 :global(html.dark) .text_title {
-  color: #f3f4f6; /* 深色模式：浅灰白 */
+  color: var(--text-primary);
 }
 
 .main:hover .text_title {
-  color: #06b6d4; /* hover：青色 */
+  color: var(--primary-color, #06b6d4); /* 使用 CSS 变量 */
+}
+
+:global(html.dark) .main:hover .text_title {
+  color: var(--primary-color, #BE1C41);
 }
 
 .text_meta {
@@ -267,16 +288,16 @@ const handleTagClick = (tag: string) => {
 }
 
 :global(html.dark) .text_meta {
-  color: #9ca3af; /* 深色模式：浅灰 */
+  color: var(--text-secondary);
 }
 
 .category {
-  color: #06b6d4; /* 浅色模式：青色 */
+  color: var(--primary-color, #06b6d4); /* 使用 CSS 变量 */
   font-weight: 600;
 }
 
 :global(html.dark) .category {
-  color: #22d3ee; /* 深色模式：亮青色 */
+  color: var(--primary-color, #BE1C41);
 }
 
 .separator {
@@ -314,11 +335,16 @@ const handleTagClick = (tag: string) => {
 
 :global(html.dark) .tag {
   background: #374151; /* 深色模式：深灰背景 */
-  color: #d1d5db; /* 深色模式：浅灰文字 */
+  color: var(--text-secondary);
 }
 
 .tag:hover {
-  background: #06b6d4; /* hover：青色背景 */
+  background: var(--primary-color, #06b6d4); /* hover：使用 CSS 变量 */
+  color: white;
+}
+
+:global(html.dark) .tag:hover {
+  background: var(--primary-color, #BE1C41);
   color: white;
 }
 
@@ -369,7 +395,7 @@ const handleTagClick = (tag: string) => {
 }
 
 :global(html.dark) .stats_text {
-  color: #e5e7eb; /* 深色模式：浅灰白 */
+  color: var(--text-secondary);
 }
 
 .icon_svg {
@@ -379,11 +405,15 @@ const handleTagClick = (tag: string) => {
 }
 
 :global(html.dark) .icon_svg {
-  fill: #d1d5db; /* 深色模式：浅灰 */
+  fill: var(--text-secondary);
 }
 
 .stats-item:hover {
-  background-color: #06b6d4; /* hover：青色 */
+  background-color: var(--primary-color, #06b6d4); /* hover：使用 CSS 变量 */
+}
+
+:global(html.dark) .stats-item:hover {
+  background-color: var(--primary-color, #BE1C41);
 }
 .stats-item:hover .icon_svg {
   fill: white;
@@ -431,13 +461,42 @@ const handleTagClick = (tag: string) => {
 }
 
 .read-btn:hover {
-  background: #06b6d4; /* hover：青色 */
+  background: var(--primary-color, #06b6d4); /* hover：使用 CSS 变量 */
   color: white;
-  border-color: #06b6d4;
+  border-color: var(--primary-color, #06b6d4);
 }
 
 :global(html.dark) .read-btn:hover {
-  background: #22d3ee; /* 深色模式 hover：亮青色 */
-  border-color: #22d3ee;
+  background: var(--primary-color, #BE1C41);
+  color: white;
+  border-color: var(--primary-color, #BE1C41);
+}
+</style>
+
+<style>
+/* 深色模式全局颜色覆盖 */
+html.dark .category {
+  color: #BE1C41 !important;
+}
+
+html.dark .main:hover .text_title {
+  color: #BE1C41 !important;
+}
+
+html.dark .tag:hover {
+  background: #BE1C41 !important;
+}
+
+html.dark .stats-item:hover {
+  background-color: #BE1C41 !important;
+}
+
+html.dark .read-btn:hover {
+  background: #BE1C41 !important;
+  border-color: #BE1C41 !important;
+}
+
+html.dark .badge.original {
+  background: linear-gradient(135deg, #BE1C41, #a01535) !important;
 }
 </style>

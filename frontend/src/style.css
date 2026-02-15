@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 @theme {
   --color-my-header-bg: #AFCDEF;
 }
@@ -9,12 +10,20 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #ffffff;
+  background-color: #F7F9FE;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  transition-property: background-color, color, border-color, box-shadow, fill, stroke, opacity, transform, translate;
+  transition-duration: 0.45s;
+  transition-timing-function: ease-in-out;
 }
 
 a {
@@ -30,7 +39,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #F7F9FE;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 h1 {
@@ -65,7 +75,10 @@ button:focus-visible {
 
 #app {
   width: 100%;
+  min-height: 100vh;
+  background-color: #F7F9FE;
   text-align: center;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 @media (prefers-color-scheme: light) {
@@ -85,15 +98,28 @@ button:focus-visible {
 html.dark,
 html.dark-mode {
   color-scheme: dark;
+  --text-primary: rgba(255, 255, 255, 0.87);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-disabled: rgba(255, 255, 255, 0.38);
 }
 
 html.dark body,
-html.dark-mode body {
-  background-color: #000000;
+html.dark-mode body,
+.dark body,
+.dark-mode body {
+  background-color: #121212;
+  color: var(--text-primary);
+}
+
+html.dark #app,
+html.dark-mode #app,
+.dark #app,
+.dark-mode #app {
+  background-color: #121212;
 }
 
 html.dark .grid-wrapper {
-  background: #000000 !important;
+  background: #121212 !important;
 }
 
 /* 深色模式下的网格线条 - 红色，中心清晰向外消失 */
@@ -122,7 +148,7 @@ html.dark .grid-background {
 
 /* 深色模式下拉框：纯黑背景 + 红色边框光效 */
 html.dark .nav-dropdown-card {
-  background: #000000 !important;
+  background: #1e1e1e !important;
   border: 1px solid rgba(229, 34, 78, 0.35) !important;
   box-shadow: 
     0px 6px 30px rgba(229, 34, 78, 0.3),
@@ -131,7 +157,7 @@ html.dark .nav-dropdown-card {
 
 /* 深色模式内容区：纯黑背景，无模糊 */
 html.dark .card-content {
-  background: #000000 !important;
+  background: #1e1e1e !important;
   backdrop-filter: none !important;
 }
 
@@ -150,34 +176,60 @@ html.dark .nav-dropdown-card::before {
   ) !important;
 }
 
-/* 深色模式下的白色导航栏 - 纯黑 + 红色强调 */
-html.dark header[class*="bg-white"] {
-  background: #000000 !important;
+/* 深色模式下的浅色导航栏 - 纯黑 + 红色强调 */
+html.dark header.header-light {
+  background: #121212 !important;
   backdrop-filter: blur(10px) !important;
   box-shadow: 0 8px 32px rgba(229, 34, 78, 0.2), inset 0 1px 0 rgba(229, 34, 78, 0.15) !important;
   border-bottom: 1px solid rgba(229, 34, 78, 0.2) !important;
 }
 
-html.dark header[class*="bg-white"] a,
-html.dark header[class*="bg-white"] span {
-  color: #e2e8f0 !important;
+html.dark header.header-light a,
+html.dark header.header-light span {
+  color: var(--text-primary) !important;
 }
 
 /* 深色模式导航栏 - hover红色下划线 */
-html.dark header[class*="bg-white"] span.absolute {
+html.dark header.header-light span.absolute {
   background: #E5224E !important;
 }
 
-html.dark header[class*="bg-white"] .text-black {
-  color: #e2e8f0 !important;
+html.dark header.header-light .text-black {
+  color: var(--text-primary) !important;
 }
 
-html.dark header[class*="bg-white"] .text-gray-600:hover {
-  color: #cbd5e1 !important;
+html.dark header.header-light .text-gray-600:hover {
+  color: var(--text-secondary) !important;
 }
 
 /* 深色模式下的内容卡片 - 禁用边框 */
 html.dark .bottom-card {
   border: none !important;
   box-shadow: none !important;
+}
+
+/* 深色模式分割线：红黑渐变，红色点缀 */
+html.dark .separator-line .line:first-child,
+html.dark-mode .separator-line .line:first-child,
+.dark .separator-line .line:first-child,
+.dark-mode .separator-line .line:first-child {
+  background: linear-gradient(to right, #111111, #7f1d1d) !important;
+}
+
+html.dark .separator-line .line:last-child,
+html.dark-mode .separator-line .line:last-child,
+.dark .separator-line .line:last-child,
+.dark-mode .separator-line .line:last-child {
+  background: linear-gradient(to right, #7f1d1d, #111111) !important;
+}
+
+html.dark .separator-title::before,
+html.dark .separator-title::after,
+html.dark-mode .separator-title::before,
+html.dark-mode .separator-title::after,
+.dark .separator-title::before,
+.dark .separator-title::after,
+.dark-mode .separator-title::before,
+.dark-mode .separator-title::after {
+  background: #ef4444 !important;
 }

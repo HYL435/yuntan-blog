@@ -1,0 +1,229 @@
+/* ==========================================================
+   CSS 变量定义 (关键部分)
+   ========================================================== */
+:global(:root) {
+  /* 浅色模式颜色 */
+  --bg-page: #F7F9FE;
+  --bg-form: #ffffff;
+  --bg-input: #ffffff;
+
+  --text-main: #151717;  /* 黑色文字 */
+  --text-sub: #4b5563;
+  --text-placeholder: #9ca3af;
+
+  --border-color: #ecedec;
+  --primary-color: #2d79f3;
+  --shadow: rgba(0, 0, 0, 0.05);
+
+  --svg-color: #151717; /* 图标颜色 */
+}
+
+:global(:root.dark) {
+  /* 深色模式颜色 */
+  --bg-page: #121212;
+  --bg-form: #1E1E1E;
+  --bg-input: #111827;
+
+  --text-main: #e5e7eb; /* 浅灰文字 */
+  --text-sub: #9ca3af;
+  --text-placeholder: #6b7280;
+
+  --border-color: #374151;
+  --primary-color: #93c5fd; /* 浅蓝色 */
+  --shadow: rgba(0, 0, 0, 0.4);
+
+  --svg-color: #e5e7eb; /* 图标变白 */
+}
+
+/* ==========================================================
+   使用变量的样式
+   ========================================================== */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page); /* 使用变量 */
+  padding: 24px;
+  transition: background-color 0.3s ease;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: var(--bg-form); /* 使用变量 */
+  color: var(--text-main);          /* 使用变量 */
+  padding: 30px;
+  width: 450px;
+  border-radius: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 20px 60px var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.flex-column > label {
+  color: var(--text-main); /* 使用变量 */
+  font-weight: 600;
+}
+
+.inputForm {
+  border: 1.5px solid var(--border-color); /* 使用变量 */
+  border-radius: 10px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  background: var(--bg-input); /* 使用变量 */
+  transition: 0.2s ease-in-out;
+  color: var(--text-main); /* 确保 SVG 继承颜色 */
+}
+
+.inputForm:focus-within {
+  border: 1.5px solid var(--primary-color);
+}
+
+.input {
+  margin-left: 10px;
+  border-radius: 10px;
+  border: none;
+  width: 85%;
+  height: 100%;
+  background: transparent;
+  color: var(--text-main); /* 使用变量 */
+}
+
+.input:focus {
+  outline: none;
+}
+
+::placeholder {
+  color: var(--text-placeholder); /* 使用变量 */
+}
+
+/* 眼睛图标按钮 */
+.toggle-password {
+  margin-left: auto;
+  margin-right: 12px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-placeholder);
+  cursor: pointer;
+}
+
+.toggle-password.is-active {
+  color: var(--primary-color);
+}
+
+.toggle-password svg {
+  fill: currentColor;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+/* 复选框样式 */
+.checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-container {
+  cursor: pointer;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-container input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.check-container svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  overflow: visible;
+}
+
+.check-container .path {
+  fill: none;
+  stroke: var(--svg-color); /* 勾选框颜色跟随变量 */
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease;
+  stroke-dasharray: 241 9999999;
+  stroke-dashoffset: 0;
+}
+
+.check-container input:checked ~ svg .path {
+  stroke-dasharray: 70.5096664428711 9999999;
+  stroke-dashoffset: -262.2723388671875;
+}
+
+.checkbox-text {
+  font-size: 14px;
+  color: var(--text-main); /* 使用变量 */
+  font-weight: 400;
+}
+
+.span {
+  font-size: 14px;
+  margin-left: 5px;
+  color: var(--primary-color);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.button-submit {
+  margin: 20px 0 10px 0;
+  background-color: var(--text-main); /* 按钮颜色跟随文字反转 */
+  border: none;
+  color: var(--bg-form); /* 按钮文字颜色 */
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  height: 50px;
+  width: 100%;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.button-submit:hover {
+  opacity: 0.9;
+}
+
+.register-text {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-main); /* 使用变量 */
+  margin: 8px 0 0;
+}
+
+.register-link {
+  margin-left: 6px;
+  color: var(--primary-color);
+  font-weight: 600;
+  cursor: pointer;
+}

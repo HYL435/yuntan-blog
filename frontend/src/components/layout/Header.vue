@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 import OptionButton from "@/components/common/OptionButton.vue";
 import DarkButton from "@/components/common/DarkButton.vue";
 import LoginButton from "@/components/common/LoginButton.vue";
@@ -8,6 +9,7 @@ import BackTopButton from "@/components/common/BackTopButton.vue";
 const showTransparentHeader = ref(true);
 const showStickyHeader = ref(false);
 const isMenuOpen = ref(false);
+const router = useRouter();
 
 const handleScroll = () => {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -20,8 +22,14 @@ const toggleMenu = () => {
   document.body.style.overflow = isMenuOpen.value ? "hidden" : "";
 };
 
+const handleOptionClick = (linkName, option) => {
+  if (linkName !== "文章") return;
+  if (!option) return;
+  router.push(`/tag/${encodeURIComponent(option)}`);
+};
+
 const navLinks = [
-  { name: "文章", href: "#super_container", options: ["全部", "前端", "后端"] },
+  { name: "文章", href: "#super_container", options: ["全部", "标签", "后端"] },
   { name: "关于", href: "#about", options: ["团队介绍", "发展历程"] },
   { name: "工作", href: "#work" },
   { name: "联系", href: "#contact", options: ["微信", "邮箱"] },
@@ -42,17 +50,17 @@ onUnmounted(() => {
   <div>
     <!-- Header 1: 透明导航 -->
     <header
-      class="fixed top-0 left-0 w-full z-30 bg-transparent py-6 transition-transform duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)]"
+      class="header-slide fixed top-0 left-0 w-full z-30 bg-transparent py-6 transition-transform duration-1000 ease-[cubic-bezier(0.19,1,0.22,1)]"
       :class="showTransparentHeader ? 'translate-y-0' : '-translate-y-full'"
     >
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
-          <a href="#" class="flex items-center gap-3">
+          <RouterLink to="/" class="flex items-center gap-3">
             <div class="w-10 h-10 bg-white text-black flex items-center justify-center rounded-sm">
                <span class="font-bold">Logo</span>
             </div>
             <span class="text-2xl font-extrabold text-white">云 坛</span>
-          </a>
+          </RouterLink>
 
           <div class="hidden md:flex items-center gap-8">
             <nav>
@@ -60,12 +68,18 @@ onUnmounted(() => {
                 <li v-for="link in navLinks" :key="link.name" class="relative group h-full flex items-center">
                   <a :href="link.href" class="relative group/link text-lg font-medium text-white hover:text-gray-200 transition-colors py-2">
                     {{ link.name }}
-                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-[width] duration-300 group-hover/link:w-full"></span>
+                    <span class="nav-underline absolute -bottom-1 left-0 h-0.5 bg-white"></span>
                   </a>
                   <div v-if="link.options" class="nav-dropdown-wrapper">
                     <div class="nav-dropdown-card">
                       <div class="card-content">
-                         <OptionButton v-for="opt in link.options" :key="opt">{{ opt }}</OptionButton>
+                         <OptionButton
+                           v-for="opt in link.options"
+                           :key="opt"
+                           @click="handleOptionClick(link.name, opt)"
+                         >
+                           {{ opt }}
+                         </OptionButton>
                       </div>
                     </div>
                   </div>
@@ -82,17 +96,17 @@ onUnmounted(() => {
 
     <!-- Header 2: 白色悬浮导航 -->
     <header
-      class="fixed top-0 left-0 w-full z-40 bg-white shadow-md py-4 transition-transform duration-700 ease-in-out"
+      class="header-slide fixed top-0 left-0 w-full z-40 bg-[#F7F9FE] shadow-md py-4 transition-transform duration-700 ease-in-out header-light"
       :class="showStickyHeader ? 'translate-y-0' : '-translate-y-full'"
     >
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between">
-          <a href="#" class="flex items-center gap-3">
+        <div class="flex items-center justify-between">      
+          <RouterLink to="/" class="flex items-center gap-3">
             <div class="w-10 h-10 bg-black text-white flex items-center justify-center rounded-sm">
                <span class="font-bold">Logo</span>
             </div>
             <span class="text-2xl font-extrabold text-black">云 坛</span>
-          </a>
+          </RouterLink>
 
           <div class="hidden md:flex items-center gap-8">
             <nav>
@@ -100,12 +114,18 @@ onUnmounted(() => {
                 <li v-for="link in navLinks" :key="link.name" class="relative group h-full flex items-center">
                   <a :href="link.href" class="relative group/link text-lg font-medium text-black hover:text-gray-600 transition-colors py-2">
                     {{ link.name }}
-                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-black transition-[width] duration-300 group-hover/link:w-full"></span>
+                    <span class="nav-underline absolute -bottom-1 left-0 h-0.5 bg-black"></span>
                   </a>
                   <div v-if="link.options" class="nav-dropdown-wrapper">
                     <div class="nav-dropdown-card">
                       <div class="card-content">
-                         <OptionButton v-for="opt in link.options" :key="opt">{{ opt }}</OptionButton>
+                         <OptionButton
+                           v-for="opt in link.options"
+                           :key="opt"
+                           @click="handleOptionClick(link.name, opt)"
+                         >
+                           {{ opt }}
+                         </OptionButton>
                       </div>
                     </div>
                   </div>
@@ -142,6 +162,23 @@ onUnmounted(() => {
 
 <style scoped>
 .bg-brand-black { background-color: #1f1f1f; }
+
+.header-slide {
+  transition: transform 1s cubic-bezier(0.19,1,0.22,1), translate 1s cubic-bezier(0.19,1,0.22,1) !important;
+  will-change: transform;
+}
+
+.nav-underline {
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.group\/link:hover .nav-underline,
+.group:hover .nav-underline {
+  transform: scaleX(1);
+}
 
 /* 1. 下拉菜单定位桥梁 */
 .nav-dropdown-wrapper {

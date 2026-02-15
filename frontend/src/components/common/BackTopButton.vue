@@ -43,15 +43,19 @@ const scrollToTop = () => {
   width: 140px;
   height: 56px;
   overflow: hidden;
-  border: 1px solid #fff;
+  border: 1px solid #F7F9FE;
   color: #0f172a;
-  background: #fff;
+  background: #F7F9FE;
   position: relative;
   padding-bottom: 2em;
   cursor: pointer;
   border-radius: 14px;
 }
 
+:global(html.dark) .back-top-button {
+  background: #121212;
+  border-color: #121212;
+}
 .back-top-button > div,
 .back-top-button > svg {
   position: absolute;
@@ -129,14 +133,10 @@ const scrollToTop = () => {
 .back-top-button:hover svg {
   transform: translateY(-50%) rotate(-90deg);
 }
-
-</style>
-
-<style>
 /* 深色模式全局样式，不使用 scoped 以获得更低的优先级 */
 html.dark .back-top-button {
-  border: 1px solid #000 !important;
-  color: #fff !important;
-  background: #000 !important;
+  border: 1px solid #121212 !important;
+  color: var(--text-primary) !important;
+  background: #121212 !important;
 }
 </style>

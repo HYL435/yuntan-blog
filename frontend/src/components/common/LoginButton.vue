@@ -1,11 +1,9 @@
 <template>
-  <button
-    type="button"
+  <RouterLink
+    to="/login"
     class="explore-button flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-base transition-all duration-300"
   >
-    <span>
-      登录
-    </span>
+    <span>登录</span>
     <svg
       class="w-4 h-4 transition-transform duration-300"
       viewBox="0 0 16 19"
@@ -16,11 +14,11 @@
         class="fill-current"
       ></path>
     </svg>
-  </button>
+  </RouterLink>
 </template>
 
 <script setup lang="ts">
-// Login button component
+import { RouterLink } from 'vue-router';
 </script>
 
 <style scoped>

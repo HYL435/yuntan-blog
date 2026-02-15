@@ -25,14 +25,14 @@ onMounted(() => {
 
 const applyDarkMode = () => {
   const html = document.documentElement
-  if (!isDark.value) {
+  if (isDark.value) {
     html.classList.add('dark')
     html.classList.add('dark-mode')
   } else {
     html.classList.remove('dark')
     html.classList.remove('dark-mode')
   }
-  localStorage.setItem('dark-mode', String(!isDark.value))
+  localStorage.setItem('dark-mode', String(isDark.value))
 }
 
 watch(isDark, () => {

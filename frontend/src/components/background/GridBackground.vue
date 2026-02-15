@@ -93,7 +93,7 @@
 
 /* 深色模式：容器背景变深蓝/黑 */
 :global(.dark) .grid-wrapper {
-  background: linear-gradient(to bottom, #0f172a 0%, #020617 100%);
+  background: #121212;
 }
 
 /* 深色模式：网格线条调整 */
