@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import OptionButton from "@/components/common/OptionButton.vue";
 import DarkButton from "@/components/common/DarkButton.vue";
-import LoginButton from "@/components/common/LoginButton.vue";
+import UserProfile from "@/components/common/UserProfile.vue";
 import BackTopButton from "@/components/common/BackTopButton.vue";
 
 const showTransparentHeader = ref(true);
@@ -29,7 +29,7 @@ const handleOptionClick = (linkName, option) => {
 };
 
 const navLinks = [
-  { name: "文章", href: "#super_container", options: ["全部", "标签", "后端"] },
+  { name: "文章", href: "#super_container", options: ["首页", "标签", "后端"] },
   { name: "关于", href: "#about", options: ["团队介绍", "发展历程"] },
   { name: "工作", href: "#work" },
   { name: "联系", href: "#contact", options: ["微信", "邮箱"] },
@@ -87,7 +87,7 @@ onUnmounted(() => {
               </ul>
             </nav>
             <DarkButton />
-            <LoginButton />
+            <UserProfile />
           </div>
           <button @click="toggleMenu" class="md:hidden text-white">菜单</button>
         </div>
@@ -134,8 +134,7 @@ onUnmounted(() => {
             </nav>
 
             <BackTopButton />
-
-            <LoginButton />
+            <UserProfile />
           </div>
           <button @click="toggleMenu" class="md:hidden text-black">菜单</button>
         </div>
@@ -154,7 +153,7 @@ onUnmounted(() => {
             <a :href="link.href" @click="toggleMenu" class="text-3xl font-medium text-white hover:text-gray-300">{{ link.name }}</a>
           </li>
         </ul>
-        <LoginButton />
+        <UserProfile />
       </div>
     </div>
   </div>

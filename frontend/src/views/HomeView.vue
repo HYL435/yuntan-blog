@@ -8,6 +8,7 @@ import ArticleCard from '@/components/cards/ArticleCard.vue';
 import BloggerCard from '@/components/cards/BloggerCard.vue';
 import SeparateLine from '@/components/separate/SeparateLine.vue';
 import ArticleTwoCard from '@/components/cards/ArticleTwoCard.vue';
+import LatestCarousel from '@/components/separate/LatestCarousel.vue';
 
 const titleScale = ref(1);
 const titleOffset = ref(0);
@@ -51,6 +52,7 @@ const goToTag = (tag?: string) => {
   if (!tag) return;
   router.push(`/tag/${encodeURIComponent(tag)}`);
 };
+
 
 onMounted(() => {
   handleScroll();
@@ -150,17 +152,7 @@ onUnmounted(() => {
               
               <!-- 第一部分：最新发布 -->
               <section>
-                <SeparateLine title="最新发布" class="mb-8 elegant-separator" />
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-                  <ArticleCard
-                    v-for="i in 6"
-                    :key="i"
-                    :article="demoArticle"
-                    class="w-full"
-                    @click="goToArticle"
-                    @tag-click="goToTag"
-                  />
-                </div>
+                <LatestCarousel title="推荐文章" />
               </section>
 
               <!-- 第二部分：深度精选 -->

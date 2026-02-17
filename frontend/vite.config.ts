@@ -12,6 +12,12 @@ export default defineConfig({
   server: {
     hmr: {
       overlay: false
+    },
+    proxy: {
+      '/front': {
+        target: 'http://localhost:9000',
+        changeOrigin: true
+      }
     }
   },
   resolve: {

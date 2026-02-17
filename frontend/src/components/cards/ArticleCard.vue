@@ -1,5 +1,5 @@
 <template>
-  <div class="main" @click="handleCardClick">
+  <div class="main" :class="$attrs.class" :style="$attrs.style" @click="handleCardClick">
     <!-- 顶部卡片区域：封面图 -->
     <!-- 使用可选链和默认图防止 coverImg 为空 -->
     <div class="card" :style="{ backgroundImage: `url(${article.coverImg || defaultCover})` }">
@@ -142,7 +142,6 @@ const handleTagClick = (tag: string) => {
 .main {
   display: flex;
   flex-direction: column;
-  width: 17em; /* 宽度 */
   position: relative;
   padding-bottom: 0.5em; 
   transition: transform 0.3s;

@@ -141,7 +141,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     /**
      * 修改用户信息
      */
-    @Transactional(rollbackFor = Exception.class) // 开启事务
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void reviseUserInfo(UserDTO userDTO) {
 
@@ -158,26 +158,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user.setImage(user.getImage().trim());
         }
 
-        // 上传头像到OSS并获取URL，并存入user
         try {
-            // 获取原来的用户信息
+            // 获取原用户
             User oldUser = this.getById(user.getId());
             if (oldUser == null) {
                 throw new BusinessException(MessageConstant.USER_NOT_FOUND);
             }
-            // 清理oss上的原头像
-            userOssUtil.deleteFile(oldUser.getImage());
+
+            // ✅ 只有原头像存在且不是默认头像时才删除
+            if (StringUtils.hasText(oldUser.getImage())
+                    && !oldUser.getImage().contains("default-avatar.jpg")) {
+                try {
+                    userOssUtil.deleteFile(oldUser.getImage());
+                } catch (Exception e) {
+                    // 删除失败时，不影响主流程，记录错误
+                    log.warn("删除旧头像失败: {}");
+                }
+            }
+
             // 上传新头像
-            String image = userOssUtil.uploadFile(userDTO.getImageFile(), FilePathConstant.USER_AVATAR_PATH);
-            // 将新头像URL存入user
-            user.setImage(image);
+            if (userDTO.getImageFile() != null) {
+                String image = userOssUtil.uploadFile(userDTO.getImageFile(), FilePathConstant.USER_AVATAR_PATH);
+                user.setImage(image);
+            }
+
         } catch (IOException e) {
+            // 捕获OSS相关的异常，提示上传失败
             throw new BusinessException(MessageConstant.UPLOAD_FAILED);
         }
 
         // 更新用户信息
         this.updateById(user);
     }
+
+
 
     /**
      * 修改用户密码

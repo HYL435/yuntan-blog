@@ -53,6 +53,6 @@ api:
 
 # application.yml
 amap:
-  key: 	b21bf1b1e058415dd060f96eeebe4d3a # 替换成你的高德 Key
+  key: b21bf1b1e058415dd060f96eeebe4d3a # 替换成你的高德 Key
 
 

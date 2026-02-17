@@ -18,6 +18,16 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/RegisterView.vue')
   },
   {
+    path: '/profile',
+    name: 'ProfileView',
+    component: () => import('@/views/ProfileView.vue')
+  },
+  {
+    path: '/profile/edit',
+    name: 'EditProfileView',
+    component: () => import('@/views/EditProfileView.vue')
+  },
+  {
     path: '/article/:id',
     name: 'ArticleDetailView',
     component: () => import('@/views/ArticleDetailView.vue')

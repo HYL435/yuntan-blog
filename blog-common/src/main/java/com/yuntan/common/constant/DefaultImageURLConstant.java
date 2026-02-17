@@ -5,7 +5,7 @@ package com.yuntan.common.constant;
  */
 public class DefaultImageURLConstant {
 
-    public static final String DEFAULT_AVATAR_URL = "https://yuntan-1303088003.cos.ap-shanghai.myqcloud.com/blog/avatar/default-avatar.jpg";
-    public static final String DEFAULT_BLOG_COVER_URL = "https://yuntan-1303088003.cos.ap-shanghai.myqcloud.com/blog/cover/default-blog-cover.jpg";
+    public static final String DEFAULT_AVATAR_URL = "https://yuntan-blog.oss-cn-hangzhou.aliyuncs.com/default/avatar/default-avatar.jpg";
+    public static final String DEFAULT_BLOG_COVER_URL = "https://yuntan-blog.oss-cn-hangzhou.aliyuncs.com/default/cover/default-article-cover.jpg";
 
 }

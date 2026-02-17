@@ -1,14 +1,24 @@
 <script setup lang="ts" name="RegisterView">
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { validateRegisterUser } from '@/utils/validators';
+import { registerApi, loginApi } from '@/api/auth';
+import { useUserStore } from '@/stores/user';
+import BackHomeButton from '@/components/common/BackHomeButton.vue';
+import { useNotification } from '@/composables/useNotification';
+
+const router = useRouter();
+const userStore = useUserStore();
+const { success, warning, error } = useNotification();
 
 const nickname = ref('');
 const email = ref('');
 const password = ref('');
 const passwordVisible = ref(false);
 const errorMessage = ref('');
+const isLoading = ref(false);
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   const result = validateRegisterUser({
     username: nickname.value,
     email: email.value,
@@ -21,7 +31,62 @@ const handleSubmit = () => {
   }
 
   errorMessage.value = '';
-  // TODO: 接入真实注册逻辑
+  isLoading.value = true;
+
+  try {
+    const registerResponse = await registerApi({
+      username: nickname.value,
+      email: email.value,
+      password: password.value
+    });
+
+    if (registerResponse.data.code === 200) {
+      // 注册成功，立即登录
+      try {
+        const loginResponse = await loginApi({
+          email: email.value,
+          password: password.value
+        });
+
+        if (loginResponse.data.code === 200) {
+          // 保存登录信息
+          await userStore.login(loginResponse.data.data);
+          success('注册成功，即将跳转！');
+          // 清空表单
+          nickname.value = '';
+          email.value = '';
+          password.value = '';
+          // 立即跳转到首页
+          setTimeout(() => {
+            router.push('/');
+          }, 500);
+        } else {
+          errorMessage.value = '登录失败，请手动登录。';
+          warning('注册成功，请手动登录');
+          setTimeout(() => {
+            router.push('/login');
+          }, 2000);
+        }
+      } catch (loginError: any) {
+        console.error('自动登录失败:', loginError);
+        errorMessage.value = '注册成功，请手动登录。';
+        warning('注册成功，请手动登录');
+        // 跳转到登录页，用户可以手动登录
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      }
+    } else {
+      errorMessage.value = registerResponse.data.message || '注册失败，请重试。';
+      error(errorMessage.value);
+    }
+  } catch (errorObj: any) {
+    console.error('注册失败:', errorObj);
+    errorMessage.value = errorObj?.response?.data?.message || '注册失败，请检查网络连接。';
+    error(errorMessage.value);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const togglePasswordVisibility = () => {
@@ -47,7 +112,10 @@ onUnmounted(() => {
 
 <template>
   <div class="login-page">
-    <form class="form" @submit.prevent="handleSubmit">
+    <BackHomeButton />
+    <div class="auth-wrap">
+      <h1 class="page-title">创建账号</h1>
+      <form class="form" @submit.prevent="handleSubmit">
       <div class="flex-column">
         <label>用户名</label>
       </div>
@@ -55,7 +123,7 @@ onUnmounted(() => {
         <svg height="20" viewBox="0 0 32 32" width="20" xmlns="http://www.w3.org/2000/svg" style="fill: currentColor">
           <g id="Layer_3" data-name="Layer 3"><path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"></path></g>
         </svg>
-        <input v-model.trim="nickname" type="text" class="input" placeholder="请输入用户名">
+        <input v-model.trim="nickname" type="text" name="username" class="input" placeholder="请输入用户名">
       </div>
 
       <div class="flex-column">
@@ -65,7 +133,7 @@ onUnmounted(() => {
         <svg height="20" viewBox="0 0 32 32" width="20" xmlns="http://www.w3.org/2000/svg" style="fill: currentColor">
           <g id="Layer_3" data-name="Layer 3"><path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"></path></g>
         </svg>
-        <input v-model.trim="email" type="email" class="input" placeholder="请输入邮箱">
+        <input v-model.trim="email" type="email" name="email" class="input" placeholder="请输入邮箱">
       </div>
 
       <div class="flex-column">
@@ -75,7 +143,7 @@ onUnmounted(() => {
         <svg height="20" viewBox="-64 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg" style="fill: currentColor">
           <path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"></path><path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"></path>
         </svg>
-        <input v-model.trim="password" :type="passwordVisible ? 'text' : 'password'" class="input" placeholder="请输入密码">
+        <input v-model.trim="password" name="password" :type="passwordVisible ? 'text' : 'password'" class="input" placeholder="请输入密码">
         <button
           type="button"
           class="toggle-password"
@@ -88,10 +156,11 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <button class="button-submit" type="submit">注册</button>
+      <button class="button-submit" type="submit" :disabled="isLoading">{{ isLoading ? '注册中...' : '注册' }}</button>
       <p v-if="errorMessage" class="register-text">{{ errorMessage }}</p>
       <p class="register-text">已有账号？<RouterLink class="register-link" to="/login">去登录</RouterLink></p>
-    </form>
+      </form>
+    </div>
   </div>
 </template>
 

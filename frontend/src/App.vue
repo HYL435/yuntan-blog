@@ -4,10 +4,12 @@ import { useRoute } from 'vue-router'
 import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 import LoadingPulse from '@/components/loaders/LoadingPulse.vue'
+import NotificationsContainer from '@/components/layout/NotificationsContainer.vue'
 
 const route = useRoute()
 const hideChromeRoutes = new Set(['/login', '/register'])
 const showChrome = computed(() => !hideChromeRoutes.has(route.path))
+const showFooter = computed(() => !hideChromeRoutes.has(route.path) && route.path !== '/profile')
 </script>
 
 <template>
@@ -22,7 +24,9 @@ const showChrome = computed(() => !hideChromeRoutes.has(route.path))
     </template>
   </Suspense>
 
-  <Footer v-if="showChrome" />
+  <Footer v-if="showFooter" />
+
+  <NotificationsContainer />
 </template>
 
 <style scoped>

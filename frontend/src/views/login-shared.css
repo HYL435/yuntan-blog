@@ -41,12 +41,29 @@
 
 .login-page {
   min-height: 100vh;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-page); /* 使用变量 */
   padding: 24px;
   transition: background-color 0.3s ease;
+}
+
+.auth-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 450px;
+  max-width: 100%;
+}
+
+.page-title {
+  margin: 0 0 18px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-main);
 }
 
 .form {
@@ -210,8 +227,13 @@
   transition: opacity 0.2s;
 }
 
-.button-submit:hover {
+.button-submit:hover:not(:disabled) {
   opacity: 0.9;
+}
+
+.button-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .register-text {
