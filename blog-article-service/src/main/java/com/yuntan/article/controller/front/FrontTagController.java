@@ -1,5 +1,6 @@
 package com.yuntan.article.controller.front;
 
+import com.yuntan.article.domain.vo.front.TagFrontVO;
 import com.yuntan.article.service.ITagService;
 import com.yuntan.common.domain.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,10 +25,10 @@ public class FrontTagController {
 
     @Operation(summary = "获取所有标签名称")
     @GetMapping
-    public Result<List<String>> getAllTagNames() {
+    public Result<List<TagFrontVO>> getAllTagNames() {
         log.info("获取所有标签名称");
 
-        List<String> list = tagService.getAllTagNames();
+        List<TagFrontVO> list = tagService.getAllTagNames();
 
         return Result.ok(list);
     }

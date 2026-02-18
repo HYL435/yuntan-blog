@@ -6,6 +6,7 @@ import com.yuntan.article.domain.dto.admin.TagUpdateDTO;
 import com.yuntan.article.domain.po.Tag;
 import com.yuntan.article.domain.vo.admin.TagContentVO;
 import com.yuntan.article.domain.vo.admin.TagVO;
+import com.yuntan.article.domain.vo.front.TagFrontVO;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface ITagService extends IService<Tag> {
     /**
      * 获取所有标签名称
      */
-    List<String> getAllTagNames();
+    List<TagFrontVO> getAllTagNames();
 
     /**
      * 获取所有标签

@@ -1,5 +1,6 @@
 package com.yuntan.article.controller.front;
 
+import com.yuntan.article.domain.vo.front.CategoryFrontVO;
 import com.yuntan.article.service.ICategoryService;
 import com.yuntan.common.domain.Result;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,10 +24,10 @@ public class FrontCategoryController {
 
     @Schema(description = "获取所有分类名称")
     @GetMapping
-    public Result<List<String>> getAllCategoryNames() {
+    public Result<List<CategoryFrontVO>> getAllCategoryNames() {
         log.info("获取所有分类名称");
 
-        List<String> list = categoryService.getAllCategoryNames();
+        List<CategoryFrontVO> list = categoryService.getAllCategoryNames();
 
         return Result.ok(list);
     }

@@ -2,6 +2,7 @@ package com.yuntan.article.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.yuntan.article.domain.po.Category;
+import com.yuntan.article.domain.vo.front.CategoryFrontVO;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -17,8 +18,8 @@ public interface CategoryMapper extends BaseMapper<Category> {
     /**
      * 获取所有分类
      */
-    @Select("select category_name from category where status = 1 and deleted = 0 order by sort desc")
-    List<String> getCategories();
+    @Select("select id,category_name from category where status = 1 and deleted = 0 order by sort desc")
+    List<CategoryFrontVO> getCategories();
 
     /**
      * 获取所有分类ID

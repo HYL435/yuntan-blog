@@ -6,6 +6,7 @@ import com.yuntan.article.domain.dto.admin.CategoryUpdateDTO;
 import com.yuntan.article.domain.po.Category;
 import com.yuntan.article.domain.vo.admin.CategoryContentVO;
 import com.yuntan.article.domain.vo.admin.CategoryVO;
+import com.yuntan.article.domain.vo.front.CategoryFrontVO;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface ICategoryService extends IService<Category> {
     /**
      * 获取所有分类名称
      */
-    List<String> getAllCategoryNames();
+    List<CategoryFrontVO> getAllCategoryNames();
 
     /**
      * 获取所有分类管理端

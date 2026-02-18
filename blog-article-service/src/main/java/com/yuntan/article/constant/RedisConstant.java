@@ -18,6 +18,7 @@ public class RedisConstant {
     // 查询类型
     public static final String QUERY_TYPE_HOT = "RECOMMEND";
     public static final String QUERY_TYPE_CATEGORY = "CATEGORY";
+    public static final String QUERY_TYPE_TAG = "TAG";
 
     public static final String ARTICLE_HASH_PREFIX = "article:info:"; // 文章缓存 Hash Key 前缀
     public static final String DIRTY_SET_KEY = "article:cnt:dirty"; // 脏数据集合 Key

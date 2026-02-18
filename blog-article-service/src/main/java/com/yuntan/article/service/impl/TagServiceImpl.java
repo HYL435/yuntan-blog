@@ -6,6 +6,7 @@ import com.yuntan.article.domain.dto.admin.TagUpdateDTO;
 import com.yuntan.article.domain.po.Tag;
 import com.yuntan.article.domain.vo.admin.TagContentVO;
 import com.yuntan.article.domain.vo.admin.TagVO;
+import com.yuntan.article.domain.vo.front.TagFrontVO;
 import com.yuntan.article.mapper.TagMapper;
 import com.yuntan.article.service.ITagService;
 import com.yuntan.common.constant.StatusConstant;
@@ -26,7 +27,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements ITagS
      * 获取所有标签名称
      */
     @Override
-    public List<String> getAllTagNames() {
+    public List<TagFrontVO> getAllTagNames() {
 
         return tagMapper.getTags();
     }

@@ -4,6 +4,7 @@ import com.alibaba.nacos.shaded.io.grpc.netty.shaded.io.netty.util.internal.Thre
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yuntan.article.constant.QueryType;
 import com.yuntan.article.constant.RedisConstant;
 import com.yuntan.article.domain.doc.ArticleContentDoc;
 import com.yuntan.article.domain.dto.admin.ArticleSaveDTO;
@@ -30,7 +31,6 @@ import com.yuntan.common.domain.PageDTO;
 import com.yuntan.common.domain.PageQuery;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.common.utils.BeanUtils;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -165,16 +165,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 2. 策略分流：判断是否走缓存 (前10页) 还是 走数据库 (深分页)
         if (pageQuery.getPageNo() <= RedisConstant.MAX_CACHE_PAGE) {
             // --- 走 Redis 缓存模式 ---
-            return getFromRedisCache(cacheKey, pageQuery, RedisConstant.QUERY_TYPE_HOT);
+            return getFromRedisCache(cacheKey, pageQuery, null, null);
         } else {
             // --- 走 MySQL 深分页模式 ---
             // 超过第10页，用户流量极低，直接查库，避免浪费 Redis 内存
-            return getFromMySQLDirectly(pageQuery);
+            return getFromMySQLDirectly(pageQuery, null, null);
         }
     }
 
     // 获取从 Redis 中获取数据
-    private PageDTO<ArticleExhibitFrontVO> getFromRedisCache(String cacheKey, PageQuery pageQuery, String type) {
+    private PageDTO<ArticleExhibitFrontVO> getFromRedisCache(String cacheKey, PageQuery pageQuery, Long categoryId, Long tagId) {
         // 1. 计算 Redis List 的下标范围 (LRANGE start end)
         // page=1 -> 0~9, page=2 -> 10~19
         long start = (long) (pageQuery.getPageNo() - 1) * pageQuery.getPageSize();
@@ -186,7 +186,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 3. 缓存击穿兜底：如果 Redis 挂了，或者定时任务还没跑，List 是空的
         if (idStrList == null || idStrList.isEmpty()) {
             // 降级为直接查库
-            return getFromMySQLDirectly(pageQuery);
+            return getFromMySQLDirectly(pageQuery, categoryId, tagId);
         }
 
         // 4. 将 ID 字符串转为 Long
@@ -218,21 +218,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     // 获取从 MySQL 中获取数据
-    private PageDTO<ArticleExhibitFrontVO> getFromMySQLDirectly(PageQuery pageQuery) {
+    private PageDTO<ArticleExhibitFrontVO> getFromMySQLDirectly(PageQuery pageQuery, Long categoryId, Long tagId) {
         // --- 走 MySQL 深分页模式 ---
         // 超过第10页，用户流量极低，直接查库，避免浪费 Redis 内存
         // 构建分页参数，获取page对象
         Page<Article> page = pageQuery.toMpPage();
 
-        // 设置查询条件
-        LambdaQueryChainWrapper<Article> query = new LambdaQueryChainWrapper<>(articleMapper)
-                .eq(Article::getStatus, ArticleStatusEnum.PUBLISHED.getValue())
-                .orderByDesc(Article::getIsTop)
-                .orderByDesc(Article::getUpdateTime);
-        // 查询
-        Page<Article> result = query.page(page);
-        // 转换为VO对象
-        PageDTO<ArticleExhibitFrontVO> articleExhibitFrontVOPageDTO = PageDTO.of(result, ArticleExhibitFrontVO.class);
+        // 直接调用你原来深分页用的那个 mapper 方法（已经完美处理了分类/标签/状态/排序）
+        Page<ArticleExhibitFrontVO> resultPage = articleMapper.selectArticleWithCategory(
+                page,
+                categoryId,
+                tagId
+        );
+
+        // 转 PageDTO + 设置分类标签
+        PageDTO<ArticleExhibitFrontVO> articleExhibitFrontVOPageDTO = PageDTO.of(resultPage, ArticleExhibitFrontVO.class);
 
         // 获取并设置分类和标签
         articleExhibitFrontVOPageDTO.getList().forEach(this::setCategoryAndTags);
@@ -241,17 +241,34 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     // 确定缓存Key
-    private String determineCacheKey(String type, Long categoryId) {
-        if ("RECOMMEND".equals(type)) {
-            return RedisConstant.GLOBAL_HOT_KEY;
-        } else if ("CATEGORY".equals(type)) {
-            if (categoryId == null) {
-                throw new IllegalArgumentException("分类查询必须提供 categoryId");
-            }
-            return String.format(RedisConstant.CAT_HOT_KEY_PREFIX, categoryId);
+    private String determineCacheKey(String type, Long id) {
+        if (type == null) {
+            throw new IllegalArgumentException("列表类型不能为空");
         }
-        throw new IllegalArgumentException("不支持的列表类型: " + type);
+
+        switch (type) {
+            case QueryType.RECOMMEND:
+                return RedisConstant.GLOBAL_HOT_KEY;
+
+            case QueryType.CATEGORY:
+                validateId(id, "分类查询必须提供 categoryId");
+                return String.format(RedisConstant.CAT_HOT_KEY_PREFIX, id);
+
+            case QueryType.TAG:
+                validateId(id, "标签查询必须提供 tagId");
+                return String.format(RedisConstant.QUERY_TYPE_TAG, id);
+
+            default:
+                throw new IllegalArgumentException("不支持的列表类型: " + type);
+        }
     }
+
+    private void validateId(Long id, String message) {
+        if (id == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
 
     /**
      * 分页查询文章列表通过分类或标签
@@ -259,34 +276,53 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PageDTO<ArticleExhibitFrontVO> pageExhibitByCategoryOrTags(ArticleExhibitQuery query) {
-
         // 1. 参数校验与 Key 生成
-        String cacheKey = determineCacheKey(RedisConstant.QUERY_TYPE_CATEGORY, query.getCategoryId());
+        Long categoryId = query.getCategoryId();
+        Long tagId = query.getTagId();
+        int pageNo = query.getPageNo();
+        int maxCachePage = RedisConstant.MAX_CACHE_PAGE;
 
-        // 2. 策略分流：判断是否走缓存 (前10页) 还是 走数据库 (深分页)
-        if (query.getPageNo() <= RedisConstant.MAX_CACHE_PAGE && query.getCategoryId() != null) {
-            // --- 走 Redis 缓存模式 ---
-            return getFromRedisCache(cacheKey, query, RedisConstant.QUERY_TYPE_CATEGORY);
-        } else {
-            // --- 走 MySQL 深分页模式 ---
-            // 超过第10页，用户流量极低，直接查库，避免浪费 Redis 内存
-            // 构建分页参数，获取page对象
-            Page<Article> page = query.toMpPage();
-
-            // 调用Mapper联表分页查询（分页插件自动拼接LIMIT）
-            Page<ArticleExhibitFrontVO> resultPage = articleMapper.selectArticleWithCategory(
-                    page,
-                    query.getCategoryId(),
-                    query.getTagId()
-            );
-
-            // 转换为VO对象
-            PageDTO<ArticleExhibitFrontVO> articleExhibitFrontVOPageDTO = PageDTO.of(resultPage, ArticleExhibitFrontVO.class);
-
-            // 获取并设置分类和标签
-            articleExhibitFrontVOPageDTO.getList().forEach(this::setCategoryAndTags);
-
-            return articleExhibitFrontVOPageDTO;
+        // 分类查询
+        if (categoryId != null) {
+            String cacheKey = determineCacheKey(RedisConstant.QUERY_TYPE_CATEGORY, categoryId);
+            if (pageNo <= maxCachePage) {
+                // Redis缓存
+                return getFromRedisCache(cacheKey, query, categoryId, null);
+            } else {
+                // MySQL深分页
+                Page<Article> page = query.toMpPage();
+                Page<ArticleExhibitFrontVO> resultPage = articleMapper.selectArticleWithCategory(
+                        page,
+                        categoryId,
+                        null // 标签ID为null
+                );
+                PageDTO<ArticleExhibitFrontVO> articleExhibitFrontVOPageDTO = PageDTO.of(resultPage, ArticleExhibitFrontVO.class);
+                articleExhibitFrontVOPageDTO.getList().forEach(this::setCategoryAndTags);
+                return articleExhibitFrontVOPageDTO;
+            }
+        }
+        // 标签查询
+        else if (tagId != null) {
+            String cacheKey = determineCacheKey(RedisConstant.QUERY_TYPE_TAG, tagId);
+            if (pageNo <= maxCachePage) {
+                // Redis缓存
+                return getFromRedisCache(cacheKey, query, null, tagId);
+            } else {
+                // MySQL深分页
+                Page<Article> page = query.toMpPage();
+                Page<ArticleExhibitFrontVO> resultPage = articleMapper.selectArticleWithCategory(
+                        page,
+                        null, // 分类ID为null
+                        tagId
+                );
+                PageDTO<ArticleExhibitFrontVO> articleExhibitFrontVOPageDTO = PageDTO.of(resultPage, ArticleExhibitFrontVO.class);
+                articleExhibitFrontVOPageDTO.getList().forEach(this::setCategoryAndTags);
+                return articleExhibitFrontVOPageDTO;
+            }
+        }
+        // 分类和标签都为空，返回空页或抛异常
+        else {
+            return new PageDTO<>();
         }
     }
 

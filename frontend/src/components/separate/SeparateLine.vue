@@ -2,15 +2,17 @@
   <div class="separator-wrapper">
     <div class="separator-line">
       <div class="line"></div>
-      <div v-if="title" class="separator-title">{{ title }}</div>
+      <div v-if="title" class="separator-title">
+        {{ typeof title === 'object' && title !== null && 'categoryName' in title ? title.categoryName : title }}
+      </div>
       <div class="line"></div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" name="SeparateLine">
 defineProps<{
-  title?: string;
+  title?: string | object;
 }>();
 </script>
 

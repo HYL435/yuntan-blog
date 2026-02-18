@@ -9,6 +9,17 @@ import BloggerCard from '@/components/cards/BloggerCard.vue';
 import SeparateLine from '@/components/separate/SeparateLine.vue';
 import ArticleTwoCard from '@/components/cards/ArticleTwoCard.vue';
 import LatestCarousel from '@/components/separate/LatestCarousel.vue';
+import { getCategories, CategoryFrontVO } from '@/api/category';
+import http from '@/api/http';
+import HotTagsSidebar from '@/components/common/HotTagsSidebar.vue';
+// 标签类型
+interface TagFrontVO {
+  id: number;
+  tagName: string;
+  articleCount?: number;
+}
+
+const tags = ref<TagFrontVO[]>([]);
 
 const titleScale = ref(1);
 const titleOffset = ref(0);
@@ -29,6 +40,75 @@ const demoArticle = {
   viewCount: 1024,
   publishTime: '2026-02-04T10:00:00'
 };
+
+const categories = ref<CategoryFrontVO[]>([]);
+const categoryArticles = ref<Record<string, any[]>>({});
+
+onMounted(async () => {
+  // 分类及文章
+  const res = await getCategories();
+  categories.value = res;
+  await Promise.all(
+    res.map(async (cat) => {
+      const articlesRes = await http.get('/front/articles/page/categoryOrTags', {
+        params: {
+          pageNo: 1,
+          pageSize: 10,
+          categoryId: cat.id,
+        },
+      });
+      if (articlesRes.data?.data) {
+        if (Array.isArray(articlesRes.data.data.records)) {
+          categoryArticles.value[cat.id] = articlesRes.data.data.records;
+        } else if (Array.isArray(articlesRes.data.data.list)) {
+          categoryArticles.value[cat.id] = articlesRes.data.data.list;
+        } else if (Array.isArray(articlesRes.data.data)) {
+          categoryArticles.value[cat.id] = articlesRes.data.data;
+        } else {
+          categoryArticles.value[cat.id] = [];
+        }
+      } else {
+        categoryArticles.value[cat.id] = [];
+      }
+    })
+  );
+
+  // 标签及每个标签的文章总数
+  try {
+    const tagRes = await http.get('/front/tags');
+    if (Array.isArray(tagRes.data?.data)) {
+      const tagList = tagRes.data.data;
+      // 并发请求每个标签的文章总数
+      const tagWithCount = await Promise.all(tagList.map(async (tag: TagFrontVO) => {
+        try {
+          const res = await http.get('/front/articles/page/categoryOrTags', {
+            params: {
+              pageNo: 1,
+              pageSize: 1,
+              tagId: tag.id,
+            },
+          });
+          let total = 0;
+          if (res.data?.data) {
+            if (typeof res.data.data.total === 'number') {
+              total = res.data.data.total;
+            } else if (Array.isArray(res.data.data)) {
+              total = res.data.data.length;
+            }
+          }
+          return { ...tag, articleCount: total };
+        } catch {
+          return { ...tag, articleCount: 0 };
+        }
+      }));
+      tags.value = tagWithCount;
+    } else {
+      tags.value = [];
+    }
+  } catch (e) {
+    tags.value = [];
+  }
+});
 
 const handleScroll = () => {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -52,7 +132,6 @@ const goToTag = (tag?: string) => {
   if (!tag) return;
   router.push(`/tag/${encodeURIComponent(tag)}`);
 };
-
 
 onMounted(() => {
   handleScroll();
@@ -157,25 +236,34 @@ onUnmounted(() => {
 
               <!-- 第二部分：深度精选 -->
               <section>
-                <SeparateLine title="深度精选" class="mb-8 elegant-separator" />
-                <div class="grid grid-cols-1 gap-8">
-                  <ArticleTwoCard
-                    v-for="index in 3"
-                    :key="`two-${index}`"
-                    :articleId="demoArticle.id"
-                    :title="demoArticle.title"
-                    :coverUrl="demoArticle.coverImg"
-                    :publishTime="demoArticle.publishTime"
-                    :heat="demoArticle.viewCount"
-                    :comments="demoArticle.commentCount"
-                    :likes="demoArticle.likeCount"
-                    :excerpt="demoArticle.excerpt"
-                    :primaryTag="demoArticle.category"
-                    :secondaryTag="demoArticle.tags[0]"
-                    :imagePosition="index % 2 === 0 ? 'left' : 'right'"
-                    @click="goToArticle"
-                  />
-                </div>
+                <template v-if="categories.length">
+                  <div v-for="cat in categories" :key="cat.id">
+                    <SeparateLine :title="cat" :data-category-id="cat.id" class="mb-8 elegant-separator" />
+                    <div class="grid grid-cols-1 gap-8">
+                      <div v-if="!categoryArticles[cat.id] || !categoryArticles[cat.id].length" class="text-center text-gray-400 py-8">
+                        暂无文章
+                      </div>
+                      <div v-else>
+                        <div v-for="article in categoryArticles[cat.id]" :key="article.id" class="mb-8 last:mb-0">
+                          <ArticleTwoCard
+                            :articleId="article.id"
+                            :title="article.title"
+                            :coverUrl="article.coverImg"
+                            :publishTime="article.publishTime"
+                            :heat="Number(article.viewCount)"
+                            :comments="Number(article.commentCount)"
+                            :likes="Number(article.likeCount)"
+                            :excerpt="article.summary"
+                            :primaryTag="article.category || cat.categoryName"
+                            :secondaryTag="article.tags && article.tags.length ? article.tags[0] : ''"
+                            :imagePosition="'right'"
+                            @click="goToArticle"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
               </section>
               
             </div>
@@ -193,22 +281,24 @@ onUnmounted(() => {
                     <span>🏷️</span> 热门话题
                   </h3>
                   <div class="flex flex-wrap gap-2">
-                    <span class="px-3 py-1 bg-white dark:bg-[#333] 
+                    <template v-if="tags.length">
+                      <span
+                        v-for="tag in tags"
+                        :key="tag.id"
+                        class="px-3 py-1 bg-white dark:bg-[#333] 
                                border border-gray-200 dark:border-slate-600 
                                rounded-full text-xs 
                                text-gray-700 dark:text-slate-300
                                hover:bg-indigo-500 hover:text-white 
-                               dark:hover:bg-indigo-600 transition-colors cursor-pointer">
-                      #Vue3
-                    </span>
-                    <span class="px-3 py-1 bg-white dark:bg-[#333] 
-                               border border-gray-200 dark:border-slate-600 
-                               rounded-full text-xs 
-                               text-gray-700 dark:text-slate-300
-                               hover:bg-indigo-500 hover:text-white 
-                               dark:hover:bg-indigo-600 transition-colors cursor-pointer">
-                      #设计
-                    </span>
+                               dark:hover:bg-indigo-600 transition-colors cursor-pointer"
+                        @click="goToTag(tag.tagName)"
+                      >
+                        #{{ tag.tagName }}
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span class="text-gray-400 text-xs">暂无标签</span>
+                    </template>
                   </div>
                 </div>
               </div>

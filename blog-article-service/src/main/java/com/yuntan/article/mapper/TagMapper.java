@@ -2,6 +2,7 @@ package com.yuntan.article.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.yuntan.article.domain.po.Tag;
+import com.yuntan.article.domain.vo.front.TagFrontVO;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -17,6 +18,6 @@ public interface TagMapper extends BaseMapper<Tag> {
     /**
      * 获取所有标签名称
      */
-    @Select("select tag_name from tag where status = 1 and deleted = 0")
-    List<String> getTags();
+    @Select("select id,tag_name from tag where status = 1 and deleted = 0")
+    List<TagFrontVO> getTags();
 }

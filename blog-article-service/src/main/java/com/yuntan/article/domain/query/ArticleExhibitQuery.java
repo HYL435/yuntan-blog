@@ -3,6 +3,7 @@ package com.yuntan.article.domain.query;
 import com.yuntan.common.domain.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 public class ArticleExhibitQuery extends PageQuery {

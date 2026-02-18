@@ -1,57 +1,93 @@
 <script setup lang="ts" name="TagView">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TagArticleCard from '@/components/cards/TagArticleCard.vue';
+import HotTagsSidebar from '@/components/common/HotTagsSidebar.vue';
 
 const route = useRoute();
 const router = useRouter();
 
 const tagName = computed(() => route.params.name?.toString() ?? 'JS');
+const tagId = computed(() => {
+  const found = tabs.value.find(t => t.tagName === tagName.value);
+  return found ? found.id : undefined;
+});
 
-const tabs = ref([
-  { name: 'JS', count: 3 },
-  { name: 'CSS', count: 0 },
-  { name: 'Vue', count: 10 },
-  { name: 'NodeJS', count: 1 },
-  { name: '博客', count: 3 },
-  { name: '浏览器', count: 3 },
-  { name: '优化', count: 1 },
-  { name: '前端', count: 0 },
-  { name: 'axios', count: 0 },
-  { name: '渡一面试题(JS)', count: 15 },
-  { name: '渡一面试题(Promise)', count: 1 },
-  { name: '网络', count: 10 },
-  { name: '渡一面试题(工程化)', count: 2 },
-  { name: 'Django', count: 3 },
-  { name: '高仿网易云', count: 1 }
-]);
+// 标签类型
+interface TagFrontVO {
+  id: number;
+  tagName: string;
+  articleCount?: number;
+}
 
-const articles = computed(() => [
-  {
-    id: 'tag-1',
-    title: 'js实现粒子时钟特效',
-    cover: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=1200&auto=format&fit=crop',
-    category: '学习笔记',
-    tag: tagName.value,
-    publishTime: '2023-08-27 14:37:35'
-  },
-  {
-    id: 'tag-2',
-    title: '几步让你记住JS中等号运算符的运算和转换规则',
-    cover: 'https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=1200&auto=format&fit=crop',
-    category: '学习笔记',
-    tag: tagName.value,
-    publishTime: '2023-08-27 14:25:37'
-  },
-  {
-    id: 'tag-3',
-    title: '几行代码教你彻底明白自属性到底存在与否',
-    cover: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1200&auto=format&fit=crop',
-    category: '学习笔记',
-    tag: tagName.value,
-    publishTime: '2023-08-27 14:18:17'
+const tabs = ref<TagFrontVO[]>([]);
+
+onMounted(async () => {
+  try {
+    const tagRes = await import('@/api/http').then(m => m.default.get('/front/tags'));
+    if (Array.isArray(tagRes.data?.data)) {
+      // 兼容后端返回没有文章数的情况
+      tabs.value = tagRes.data.data.map((tag: any) => ({
+        ...tag,
+        articleCount: typeof tag.articleCount === 'number' ? tag.articleCount : 0
+      }));
+    } else {
+      tabs.value = [];
+    }
+  } catch (e) {
+    tabs.value = [];
   }
-]);
+});
+
+const articles = ref<any[]>([]);
+const total = ref(0);
+const pageNo = ref(1);
+const pageSize = ref(5);
+const loading = ref(false);
+
+const fetchArticles = async () => {
+  if (!tagId.value) {
+    articles.value = [];
+    total.value = 0;
+    return;
+  }
+  loading.value = true;
+  try {
+    const res = await import('@/api/http').then(m => m.default.get('/front/articles/page/categoryOrTags', {
+      params: {
+        pageNo: pageNo.value,
+        pageSize: pageSize.value,
+        tagId: tagId.value,
+      }
+    }));
+    const data = res.data?.data;
+    if (data) {
+      if (Array.isArray(data.records)) {
+        articles.value = data.records;
+        total.value = data.total || 0;
+      } else if (Array.isArray(data.list)) {
+        articles.value = data.list;
+        total.value = data.total || 0;
+      } else if (Array.isArray(data)) {
+        articles.value = data;
+        total.value = data.length;
+      } else {
+        articles.value = [];
+        total.value = 0;
+      }
+    } else {
+      articles.value = [];
+      total.value = 0;
+    }
+  } catch (e) {
+    articles.value = [];
+    total.value = 0;
+  }
+  loading.value = false;
+};
+
+// 监听标签变化和分页变化
+watch([tagId, pageNo, pageSize], fetchArticles, { immediate: true });
 
 const goToTag = (name: string) => {
   router.push(`/tag/${encodeURIComponent(name)}`);
@@ -63,44 +99,36 @@ const goToArticle = (id: string) => {
 </script>
 
 <template>
-  <div class="tag-page min-h-screen bg-[#F7F9FE] dark:bg-[#121212] text-slate-900 dark:text-white">
-    <div class="max-w-6xl mx-auto px-4 md:px-6 pt-28 pb-16">
-      <div class="tabs-wrap">
-        <button
-          v-for="tab in tabs"
-          :key="tab.name"
-          class="tab-chip"
-          :class="{ 'is-active': tab.name === tagName }"
-          @click="goToTag(tab.name)"
-        >
-          <span class="tab-name">{{ tab.name }}</span>
-          <span class="tab-count">{{ tab.count }}</span>
-        </button>
-      </div>
-
+  <div class="tag-page min-h-screen bg-[#F7F9FE] dark:bg-[#121212] text-slate-900 dark:text-white flex">
+    <div class="hidden md:block w-64 flex-shrink-0 pt-28">
+      <HotTagsSidebar :tags="tabs" :goToTag="goToTag" />
+    </div>
+    <div class="flex-1 max-w-6xl mx-auto px-4 md:px-6 pt-28 pb-16">
       <div class="mt-10">
         <h2 class="text-3xl md:text-4xl font-semibold">标签 - {{ tagName }}</h2>
-        <p class="mt-2 text-slate-500 dark:text-slate-400">共 {{ articles.length }} 篇文章</p>
+        <p class="mt-2 text-slate-500 dark:text-slate-400">共 {{ total }} 篇文章</p>
       </div>
 
       <div class="mt-8 space-y-6">
+        <div v-if="loading" class="text-center text-gray-400 py-8">加载中...</div>
+        <div v-else-if="!articles.length" class="text-center text-gray-400 py-8">暂无文章</div>
         <TagArticleCard
           v-for="(article, index) in articles"
           :key="article.id"
-          :index="index + 1"
+          :index="(pageNo - 1) * pageSize + index + 1"
           :title="article.title"
-          :cover="article.cover"
+          :cover="article.coverImg || article.cover"
           :category="article.category"
-          :tag="article.tag"
+          :tag="article.tagName || article.tag"
           :publishTime="article.publishTime"
           @click="goToArticle(article.id)"
         />
       </div>
 
-      <div class="mt-10 flex items-center justify-center gap-3">
-        <button class="pager">‹</button>
-        <button class="pager is-current">1</button>
-        <button class="pager">›</button>
+      <div class="mt-10 flex items-center justify-center gap-3" v-if="total > pageSize">
+        <button class="pager" :disabled="pageNo === 1" @click="pageNo > 1 && (pageNo--)">‹</button>
+        <button class="pager is-current">{{ pageNo }}</button>
+        <button class="pager" :disabled="pageNo >= Math.ceil(total / pageSize)" @click="pageNo < Math.ceil(total / pageSize) && (pageNo++)">›</button>
       </div>
     </div>
   </div>

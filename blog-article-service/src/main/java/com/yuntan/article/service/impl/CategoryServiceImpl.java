@@ -6,6 +6,7 @@ import com.yuntan.article.domain.dto.admin.CategoryUpdateDTO;
 import com.yuntan.article.domain.po.Category;
 import com.yuntan.article.domain.vo.admin.CategoryContentVO;
 import com.yuntan.article.domain.vo.admin.CategoryVO;
+import com.yuntan.article.domain.vo.front.CategoryFrontVO;
 import com.yuntan.article.mapper.CategoryMapper;
 import com.yuntan.article.service.ICategoryService;
 import com.yuntan.common.constant.StatusConstant;
@@ -26,7 +27,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
      * 获取所有分类名称
      */
     @Override
-    public List<String> getAllCategoryNames() {
+    public List<CategoryFrontVO> getAllCategoryNames() {
 
         return categoryMapper.getCategories();
 

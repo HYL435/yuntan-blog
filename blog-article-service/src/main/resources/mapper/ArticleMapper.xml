@@ -48,7 +48,7 @@
         FROM article a
         LEFT JOIN article_category ac ON a.id = ac.article_id
         LEFT JOIN article_tag at ON a.id = at.article_id
-        WHERE a.status = 1
+        WHERE a.status = 1 and a.deleted = 0
 
         <if test="categoryId != null">
             AND ac.category_id = #{categoryId}
