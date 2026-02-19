@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import ArticleCard from '@/components/cards/ArticleCard.vue'
+import ThreeBodyLoader from '@/components/loaders/ThreeBodyLoader.vue'
 
 const router = useRouter()
 const row = ref<HTMLElement | null>(null)
@@ -219,7 +220,7 @@ onUnmounted(() => {
       <span>{{ props.title }}</span>
     </button>
     <div v-if="loading && articles.length === 0" class="carousel-row" style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
-      <span>加载中...</span>
+      <ThreeBodyLoader />
     </div>
     <div v-else-if="articles.length === 0" class="carousel-row" style="display: flex; align-items: center; justify-content: center; min-height: 300px;">
       <span>无数据</span>
@@ -280,6 +281,7 @@ onUnmounted(() => {
 .latest-carousel::before {
   background: conic-gradient(from 0deg, #6366f1, #8b5cf6, #6366f1);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: rotateGlowLeft 6s infinite;
@@ -288,6 +290,7 @@ onUnmounted(() => {
 .latest-carousel::after {
   background: conic-gradient(from 180deg, #8b5cf6, #6366f1, #8b5cf6);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: rotateGlowRight 8s infinite reverse;

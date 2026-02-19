@@ -42,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -95,8 +96,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             throw new RuntimeException(MessageConstant.ARTICLE_NOT_FOUND);
         }
         ArticleFrontVO articleFrontVO = BeanUtils.copyBean(article, ArticleFrontVO.class);
+
         // 填充分类和标签
         setCategoryAndTags(articleFrontVO);
+
         // 判断用户是否登录
         if (Objects.nonNull(BaseContext.getUserId())) {
             Long userId = BaseContext.getUserId();
@@ -417,10 +420,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Transactional(rollbackFor = Exception.class)
     public void saveArticle(ArticleSaveDTO articleSaveDTO) {
 
+        // 获取当前登录用户的作者ID
+        Long currentUserId = BaseContext.getUserId(); // 根据实际项目中的登录体系来获取
+
         // 构建文章对象
         Article article = BeanUtils.copyBean(articleSaveDTO, Article.class);
 
-        // 将文章内容存储到数据库中
+        // 设置作者ID
+        article.setAuthorId(currentUserId); // 确保文章的作者ID不为null
+
         // 判断文章是否存在，存在则更新，否则插入
         if (article.getId() == null) {
             // 判断图片文件是否为空，如果不为空，则上传图片，如果为空，则使用默认图片
@@ -434,13 +442,17 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             } else {
                 article.setCoverImg(DefaultImageURLConstant.DEFAULT_BLOG_COVER_URL);
             }
+
+            // 保存文章
             this.save(article);
         } else {
+            String key;
             try {
                 Article byId = this.getById(article.getId());
                 if (byId == null) {
                     throw new BusinessException(MessageConstant.ARTICLE_NOT_FOUND);
                 }
+                key = RedisConstant.CACHE_KEY_PREFIX + byId.getId();
                 if (byId.getCoverImg() != null) {
                     // 先删除原来的图片
                     articleOssUtil.deleteFile(byId.getCoverImg());
@@ -451,56 +463,71 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             } catch (IOException e) {
                 throw new BusinessException(MessageConstant.UPLOAD_FAILED);
             }
+            // 更新文章
             this.updateById(article);
+            // 删除缓存
+            redisTemplate.delete(key);
         }
+
         // 获取文章id
         Long articleId = article.getId();
         // 获取标签ids
         List<Long> tagIds = articleSaveDTO.getTagIds();
 
+        // 确保 categoryId 和 tagIds 不为 null
+        if (articleSaveDTO.getCategoryId() == null) {
+            throw new BusinessException("分类ID不能为空");
+        }
+        if (tagIds == null || tagIds.isEmpty()) {
+            throw new BusinessException("标签ID不能为空");
+        }
+
         // 将文章分类和标签存储到数据库中
         // 删除原本的文章和分类关系
         articleCategoryMapper.deleteByArticleId(articleId);
-        // 将新的文章和分类关系存入数据库中
+        // 将新的文章和分类关系存入数据库
         articleCategoryMapper.insert(new ArticleCategory(articleId, articleSaveDTO.getCategoryId()));
 
         // 删除原本的文章和标签关系
         articleTagMapper.deleteByArticleId(articleId);
-        // 将新的文章和标签关系存入数据库中
+        // 将新的文章和标签关系存入数据库
         tagIds.forEach(tagId -> articleTagMapper.insert(new ArticleTag(articleId, tagId)));
 
         // 将正文内容存入 MongoDB
         // 构建文档对象
         ArticleContentDoc contentDoc = ArticleContentDoc.builder()
-                .id(articleSaveDTO.getMongoId())
+                .id(articleSaveDTO.getMongoId()) // 如果有 MongoId，使用它，否则使用自动生成的
                 .articleId(articleId)
                 .content(articleSaveDTO.getContent())
                 .build();
+
         // 保存文档对象
+        ArticleContentDoc savedDoc;
         try {
-            mongoTemplate.save(contentDoc);
+            savedDoc = mongoTemplate.save(contentDoc);
         } catch (Exception e) {
             // 如果保存失败，则抛出业务异常
             throw new BusinessException(MessageConstant.MONGODB_SAVE_ERROR);
         }
 
-        // 判断文章是不是第一次保存
+        // 判断文章是不是第一次保存 MongoId
         if (articleSaveDTO.getMongoId() == null) {
-            // 如果是第一次保存，则将文章id存入 数据库
+            // 如果是第一次保存，则将文章的 MongoId 回填到数据库
             this.lambdaUpdate()
                     .eq(Article::getId, articleId)
-                    .set(Article::getMongoId, articleSaveDTO.getMongoId())
+                    .set(Article::getMongoId, savedDoc.getId()) // 使用 MongoDB 返回的 ID
                     .update();
         }
-
-
     }
+
+
 
     /**
      * 发布文章
      */
     @Override
     public void publishArticle(Long id) {
+        String key = RedisConstant.CACHE_KEY_PREFIX + id;
 
         this.lambdaUpdate()
                 .eq(Article::getId, id)
@@ -508,6 +535,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 .set(Article::getPublishTime, LocalDateTime.now())
                 .update();
 
+        redisTemplate.delete(key);
     }
 
     /**
@@ -515,25 +543,31 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      */
     @Override
     public void privateArticle(Long id) {
+        String key = RedisConstant.CACHE_KEY_PREFIX + id;
 
         this.lambdaUpdate()
                 .eq(Article::getId, id)
                 .set(Article::getStatus, ArticleStatusEnum.PRIVATE.getValue())
                 .update();
 
+        redisTemplate.delete(key);
+
     }
 
     // 获取并设置文章分类和标签
     private void setCategoryAndTags(CategorizableVO categorizableVO) {
-
         // 获取文章分类
         String category = categoryMapper.getCategoryByArticleId(categorizableVO.getId());
+        // 如果分类为空，设置默认分类
+        if (category == null) {
+            category = "暂未分类";  // 你可以选择适合的默认分类名称
+        }
 
         // 获取文章标签
         List<String> tags = tagMapper.getTagsByArticleId(categorizableVO.getId());
 
         categorizableVO.setCategory(category);
         categorizableVO.setTags(tags);
-
     }
+
 }

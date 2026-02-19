@@ -34,6 +34,10 @@ onMounted(async () => {
     } else {
       tabs.value = [];
     }
+    // 初次加载时若路径为/tag/标签，自动跳转到第一个标签
+    if (route.params.name === '标签' && tabs.value.length > 0) {
+      router.replace(`/tag/${encodeURIComponent(tabs.value[0].tagName)}`);
+    }
   } catch (e) {
     tabs.value = [];
   }
@@ -89,8 +93,25 @@ const fetchArticles = async () => {
 // 监听标签变化和分页变化
 watch([tagId, pageNo, pageSize], fetchArticles, { immediate: true });
 
+// 监听路由变化，若路径为/tag/标签则自动跳转到第一个标签
+watch(
+  () => route.params.name,
+  (name) => {
+    if (name === '标签' && tabs.value.length > 0) {
+      router.replace(`/tag/${encodeURIComponent(tabs.value[0].tagName)}`);
+    }
+  }
+);
+
 const goToTag = (name: string) => {
-  router.push(`/tag/${encodeURIComponent(name)}`);
+  // 顶部导航栏按钮调用时，name为'标签'或空，需跳转到第一个标签
+  if (!name || name === '标签') {
+    if (tabs.value.length > 0) {
+      router.push(`/tag/${encodeURIComponent(tabs.value[0].tagName)}`);
+    }
+  } else {
+    router.push(`/tag/${encodeURIComponent(name)}`);
+  }
 };
 
 const goToArticle = (id: string) => {

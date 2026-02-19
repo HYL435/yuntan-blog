@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts" name="Header">
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import OptionButton from "@/components/common/OptionButton.vue";
@@ -22,17 +22,21 @@ const toggleMenu = () => {
   document.body.style.overflow = isMenuOpen.value ? "hidden" : "";
 };
 
-const handleOptionClick = (linkName, option) => {
+const handleOptionClick = (linkName: string, option: string) => {
   if (linkName !== "文章") return;
   if (!option) return;
+  if (option === "首页") {
+    router.push("/");
+    return;
+  }
   router.push(`/tag/${encodeURIComponent(option)}`);
 };
 
 const navLinks = [
-  { name: "文章", href: "#super_container", options: ["首页", "标签", "后端"] },
-  { name: "关于", href: "#about", options: ["团队介绍", "发展历程"] },
-  { name: "工作", href: "#work" },
-  { name: "联系", href: "#contact", options: ["微信", "邮箱"] },
+  { name: "文章", href: "#super_container", options: ["首页", "标签"] },
+  { name: "关于", href: "#about", options: ["关于本站", "关于博主"] },
+  { name: "社交", href: "#contact", options: ["留言板", "友链"] },
+  { name: "更多", href: "#more", options: ["藏宝阁", "工具箱"] },
 ];
 
 onMounted(() => {

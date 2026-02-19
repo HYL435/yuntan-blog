@@ -1,15 +1,6 @@
 <script setup lang="ts" name="HotTagsSidebar">
-import { ref, watch, defineProps, PropType, computed } from 'vue';
-const props = defineProps({
-  tags: {
-    type: Array as PropType<Array<{ id: number; tagName: string }>>,
-    required: true,
-  },
-  goToTag: {
-    type: Function as PropType<(tag: string) => void>,
-    required: true,
-  },
-});
+import { ref, watch, computed } from 'vue';
+const props = defineProps<{ tags: Array<{ id: number; tagName: string }>; goToTag: (tag: string) => void }>();
 const selected = ref(props.tags.length ? props.tags[0].tagName : '');
 watch(() => props.tags, (val) => {
   if (val.length && !val.find(t => t.tagName === selected.value)) {
@@ -28,7 +19,7 @@ watch(
   { immediate: true }
 );
 const totalRadio = computed(() => props.tags.length || 1);
-function handleChange(tag) {
+function handleChange(tag: string) {
   selected.value = tag;
   props.goToTag(tag);
 }
