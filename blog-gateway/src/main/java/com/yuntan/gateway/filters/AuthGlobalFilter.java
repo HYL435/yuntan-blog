@@ -79,62 +79,80 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         log.info("进入鉴权过滤器");
 
         ServerHttpRequest request = exchange.getRequest();
-        log.info("【鉴权过滤器】当前请求路径：{}", request.getPath());
+        String path = request.getPath().toString();
+        log.info("【鉴权过滤器】当前请求路径：{}", path);
 
-        // 1. 检查是否在白名单中（如 /login, /register 等）
-        if (isExclude(request.getPath())) {
-            return chain.filter(exchange); // 跳过鉴权，直接放行
-        }
-
-        // 2. 从请求头中获取 Authorization 字段（格式：Bearer <token>）
+        // 1. 从请求头中获取 Authorization 字段
         String token = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-        // 3. 判断 Token 是否存在
-        if (!StringUtils.hasText(token)) {
-            log.warn("鉴权失败：未携带 Token，Path: {}", request.getPath());
+        // 定义变量用于存储解析后的用户信息
+        Map<String, Object> payload = null;
+
+        // 2. 如果携带了 Token，尝试解析（无论是否在白名单，都要解析）
+        if (StringUtils.hasText(token)) {
+            try {
+                // 去除 "Bearer " 前缀
+                if (token.startsWith("Bearer ")) {
+                    token = token.substring(7);
+                }
+                // 解析 Token
+                payload = jwtUtil.parseToken(token);
+                log.info("Token解析成功，用户ID: {}", payload.get(KeyConstant.USER_ID));
+
+            } catch (Exception e) {
+                // Token 解析失败（过期或非法）
+                log.error("Token 解析失败: {}", e.getMessage());
+
+                // 【关键逻辑】：如果 Token 无效，但当前路径是白名单（如文章详情），则当作游客放行
+                if (isExclude(request.getPath())) {
+                    log.warn("Token无效但属于白名单接口，作为游客放行: {}", path);
+                    return chain.filter(exchange);
+                }
+
+                // 如果不是白名单，则拦截报错
+                return unauthorized(exchange, "令牌无效或已过期");
+            }
+        }
+
+        // 3. 如果没带 Token (payload == null)
+        if (payload == null) {
+            //如果是白名单，直接放行（游客模式）
+            if (isExclude(request.getPath())) {
+                log.info("未携带Token，属于白名单接口，放行: {}", path);
+                return chain.filter(exchange);
+            }
+            // 如果不是白名单，拦截
+            log.warn("鉴权失败：未携带 Token 且非白名单，Path: {}", path);
             return unauthorized(exchange, "未携带 Token");
         }
 
-        // 4. 去除 "Bearer " 前缀，提取纯 Token 字符串
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
+        // --- 到这里说明 Token 有效，且 payload 有值 ---
 
-        // 5. 解析并验证 JWT Token
-        Map<String, Object> payload;
-        try {
-            payload = jwtUtil.parseToken(token); // 可能抛出异常（如过期、签名错误）
-        } catch (Exception e) {
-            log.error("鉴权失败：Token 无效或已过期，Path: {}, Error: {}", request.getPath(), e.getMessage());
-            return unauthorized(exchange, "令牌无效或已过期");
-        }
-
-        // 6. 特殊权限校验：如果请求路径包含 "/admin"，则要求角色为管理员（role <= 1）
-        if (request.getPath().toString().contains("/admin")) {
+        // 4. 特殊权限校验：如果请求路径包含 "/admin"，则要求角色为管理员
+        if (path.contains("/admin")) {
             Integer role = (Integer) payload.get(KeyConstant.ROLE);
-            if (role == null || role > 1) {
-                log.warn("鉴权失败：权限不足，Path: {}, Role: {}", request.getPath(), role);
+            if (role == null || role > 1) { // 假设 1 是管理员，具体根据你的业务定义
+                log.warn("鉴权失败：权限不足，Path: {}, Role: {}", path, role);
                 return forbidden(exchange, "权限不足");
             }
         }
 
-        // 7. 将用户关键信息（user-id, role）通过请求头透传给下游微服务
+        // 5. 【透传用户信息】将 user-id 和 role 放入请求头传给下游微服务
+        // 这一步非常重要，微服务根据这个 header 判断当前是谁
+        Map<String, Object> finalPayload = payload;
         ServerWebExchange mutatedExchange = exchange.mutate()
                 .request(builder -> builder
-                        .header("user-info", payload.get(KeyConstant.USER_ID).toString()) // 用户ID
-                        .header("role", payload.get(KeyConstant.ROLE).toString())         // 用户角色
+                        .header("user-info", finalPayload.get(KeyConstant.USER_ID).toString()) // 用户ID
+                        .header("user-role", finalPayload.get(KeyConstant.ROLE).toString())         // 用户角色
                 )
                 .build();
 
-        // 8. 继续执行后续过滤器链
+        // 6. 放行（携带了用户信息的新请求）
         return chain.filter(mutatedExchange);
     }
 
     /**
      * 判断当前请求路径是否匹配任意一个白名单规则
-     *
-     * @param pathContainer 当前请求路径容器
-     * @return true 表示应跳过鉴权
      */
     private boolean isExclude(PathContainer pathContainer) {
         if (CollectionUtils.isEmpty(excludePatterns)) {

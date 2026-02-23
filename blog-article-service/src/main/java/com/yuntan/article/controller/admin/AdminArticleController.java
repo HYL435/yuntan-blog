@@ -1,6 +1,7 @@
 package com.yuntan.article.controller.admin;
 
 import com.yuntan.article.domain.dto.admin.ArticleSaveDTO;
+import com.yuntan.article.domain.dto.admin.ArticleStatusDTO;
 import com.yuntan.article.domain.query.ArticleManageQuery;
 import com.yuntan.article.domain.vo.admin.ArticleAdminVO;
 import com.yuntan.article.domain.vo.admin.ArticleDetailVO;
@@ -47,7 +48,7 @@ public class AdminArticleController {
 
 
     @Operation(summary = "软删除文章")
-    @DeleteMapping("/deleted/{id}")
+    @PutMapping("/deleted/{id}")
     public Result<Void> deletedArticle(@PathVariable Long id) {
 
         log.info("软删除文章，文章ID：{}", id);
@@ -79,24 +80,13 @@ public class AdminArticleController {
         return Result.ok();
     }
 
-    @Operation(summary = "发布文章")
-    @PutMapping("/publish/{id}")
-    public Result<Void> publishArticle(@PathVariable Long id) {
+    @Operation(summary = "修改文章状态")
+    @PutMapping("/status")
+    public Result<Void> updateArticleStatus(@RequestBody ArticleStatusDTO articleStatusDTO) {
 
-        log.info("发布文章，文章ID：{}", id);
+        log.info("私有文章，文章ID：{}", articleStatusDTO);
 
-        articleService.publishArticle(id);
-
-        return Result.ok();
-    }
-
-    @Operation(summary = "私有文章")
-    @PutMapping("/private/{id}")
-    public Result<Void> privateArticle(@PathVariable Long id) {
-
-        log.info("私有文章，文章ID：{}", id);
-
-        articleService.privateArticle(id);
+        articleService.updateArticleStatus(articleStatusDTO);
 
         return Result.ok();
     }

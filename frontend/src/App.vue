@@ -5,11 +5,13 @@ import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 import LoadingPulse from '@/components/loaders/LoadingPulse.vue'
 import NotificationsContainer from '@/components/layout/NotificationsContainer.vue'
+import PortalButton from '@/components/common/PortalButton.vue'
 
 const route = useRoute()
 const hideChromeRoutes = new Set(['/login', '/register'])
-const showChrome = computed(() => !hideChromeRoutes.has(route.path))
-const showFooter = computed(() => !hideChromeRoutes.has(route.path) && route.path !== '/profile')
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+const showChrome = computed(() => !isAdminRoute.value && !hideChromeRoutes.has(route.path))
+const showFooter = computed(() => !isAdminRoute.value && !hideChromeRoutes.has(route.path) && route.path !== '/profile')
 </script>
 
 <template>
@@ -27,6 +29,7 @@ const showFooter = computed(() => !hideChromeRoutes.has(route.path) && route.pat
   <Footer v-if="showFooter" />
 
   <NotificationsContainer />
+  <PortalButton />
 </template>
 
 <style scoped>

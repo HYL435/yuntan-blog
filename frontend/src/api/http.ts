@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 // 创建 axios 实例
-// 开发环境使用相对路径，生产环境使用绝对 URL
-const baseURL = (import.meta.env.MODE === 'development') ? '/' : ((import.meta.env as any).VITE_API_URL || 'http://localhost:9000');
+// 开发环境将所有请求前缀为 /api（由 Vite 代理转发到后端），生产环境使用绝对 URL
+const baseURL = (import.meta.env.MODE === 'development') ? '/api' : ((import.meta.env as any).VITE_API_URL || 'http://localhost:9000');
 
 const http: AxiosInstance = axios.create({
   baseURL,
@@ -17,8 +17,15 @@ http.interceptors.request.use(
   (config) => {
     // 从本地存储获取 token 并添加到请求头
     const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = token;
+    try {
+      // 将 token 注入到请求头，并打印调试信息，方便定位拦截器是否生效
+      if (token) {
+        ;(config.headers as any).Authorization = token;
+        ;(config.headers as any)['authorization'] = token;
+      }
+      console.debug('[http] 请求:', config.method, config.url, 'HasAuthorization=', !!token)
+    } catch (err) {
+      // 忽略日志错误，继续请求
     }
     return config;
   },
@@ -30,6 +37,10 @@ http.interceptors.request.use(
 // 响应拦截器
 http.interceptors.response.use(
   (response: AxiosResponse) => {
+    // 调试响应，方便排查后端返回与前端解析不一致的问题
+    try {
+      console.debug('[http] 响应:', response.config?.url, response.status)
+    } catch (err) {}
     return response;
   },
   (error) => {
@@ -38,8 +49,8 @@ http.interceptors.response.use(
     // 如果需要在某些页面处理 401，由业务逻辑决定
     if (error.response?.status === 401) {
       // token 过期或无效，只清除本地存储，不自动重定向
+      console.warn('[http] 401 响应，移除 auth_token')
       localStorage.removeItem('auth_token');
-      // 由具体的业务逻辑决定是否需要重定向到登录
     }
     return Promise.reject(error);
   }

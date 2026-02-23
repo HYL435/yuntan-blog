@@ -17,6 +17,12 @@ export default defineConfig({
       '/front': {
         target: 'http://localhost:9000',
         changeOrigin: true
+      },
+      // 使用 /api 前缀代理后端，避免与前端 /admin 路由冲突
+      '/api': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },

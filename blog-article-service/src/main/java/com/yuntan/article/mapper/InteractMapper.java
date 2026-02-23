@@ -19,7 +19,7 @@ public interface InteractMapper {
      * 判断用户是否收藏
      */
     @Select("select count(*) from article_collect where article_id = #{articleId} and user_id = #{userId}")
-    int isCollect(Long id, Long userId);
+    int isCollect(Long articleId, Long userId);
 
     /**
      * 文章点赞

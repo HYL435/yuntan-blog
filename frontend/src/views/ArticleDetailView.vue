@@ -1,9 +1,22 @@
 <template>
-  <div class="min-h-screen bg-[#F7F9FE] dark:bg-[#121212] transition-colors pb-20">
-    <!-- ...existing code... -->
+  <!-- 顶部加载进度条 -->
+  <div class="top-progress fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[60%] pointer-events-none" v-show="progress > 0">
+    <div class="top-progress__bar" :style="{ width: progress + '%' }"></div>
+  </div>
+  <!-- 全屏背景图 +适度模糊遮罩 -->
+  <div class="fixed inset-0 w-full h-full z-0">
+    <img v-if="article.coverImg" :src="article.coverImg" alt="背景图"
+      class="w-full h-full object-cover"
+      style="filter: blur(12px) brightness(1.08) contrast(1.05);" />
+    <div v-else class="w-full h-full bg-[#F7F9FE] dark:bg-[#121212]" style="filter: blur(12px) brightness(1.08) contrast(1.05);"></div>
+    <!-- 半透明遮罩，增强层次 -->
+    <div class="absolute inset-0 bg-white/60 dark:bg-[#18181c]/60"></div>
+  </div>
 
+  <!-- 内容区域加遮罩和居中 -->
+  <div class="relative z-10 min-h-screen flex flex-col items-center justify-center">
     <!-- 加载中状态 (骨架屏) -->
-    <div v-if="loading" class="max-w-4xl mx-auto px-4 py-10 animate-pulse">
+    <div v-if="loading" class="max-w-4xl mx-auto px-4 py-10 mt-22 animate-pulse bg-white/80 dark:bg-[#18181c]/80 rounded-2xl shadow-lg">
       <div class="h-8 bg-slate-200 dark:bg-slate-800 rounded w-1/4 mb-6"></div>
       <div class="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl mb-8"></div>
       <div class="space-y-3">
@@ -13,7 +26,7 @@
     </div>
 
     <!-- 文章主体内容 -->
-    <div v-else class="max-w-5xl mx-auto px-4 md:px-6 py-8">
+    <div v-else class="max-w-5xl mx-auto px-4 md:px-6 py-8 mt-22 bg-white/90 dark:bg-[#18181c]/90 rounded-2xl shadow-lg">
       <!-- 1. 头部信息区域 -->
       <header class="mb-8 text-center md:text-left">
         <!-- 分类与标签 -->
@@ -88,15 +101,26 @@
 
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-20 relative">
+        <!-- 右侧目录栏 (Desktop) -->
+        <ArticleTocSidebar
+          v-if="!loading"
+          :html="renderedContent"
+          :visible="sidebarVisible"
+          class="hidden lg:block fixed right-8 top-[196px] z-30 w-64 max-h-[70vh] bg-white/90 dark:bg-[#18181c]/90 rounded-2xl shadow border border-slate-100 dark:border-slate-800 p-4 overflow-y-auto"
+        />
         <!-- 左侧悬浮操作栏 (Desktop) -->
-        <aside class="hidden lg:flex flex-col items-center gap-3 fixed left-[100px] top-[196px] z-30 w-20 py-6 bg-white/80 dark:bg-[#18181c]/80 rounded-3xl shadow border border-slate-100 dark:border-slate-800">
+        <aside 
+          v-if="!loading"
+          :style="sidebarVisible ? 'transform: translateX(0); opacity: 1;' : 'transform: translateX(-120%); opacity: 0;'"
+          class="hidden lg:flex flex-col items-center gap-3 fixed left-[100px] top-[196px] z-30 w-20 py-6 bg-white/80 dark:bg-[#18181c]/80 rounded-3xl shadow border border-slate-100 dark:border-slate-800 transition-all duration-500"
+        >
           <AnimatedActionButton
             :checked="article.isLike"
             icon="heart"
             id="like-checkbox"
             title="点赞"
             style="width:32px;height:32px;"
-            @update:checked="val => { article.isLike = val; handleLike(); }"
+            @update:checked="handleLike"
           />
           <span class="text-xs text-slate-500 font-medium -mt-1">{{ formatNumber(article.likeCount) }}</span>
 
@@ -106,7 +130,7 @@
             id="collect-checkbox"
             title="收藏"
             style="width:32px;height:32px;"
-            @update:checked="val => { article.isCollect = val; handleCollect(); }"
+            @update:checked="handleCollect"
           />
           <span class="text-xs text-slate-500 font-medium -mt-1">{{ formatNumber(article.collectCount) }}</span>
 
@@ -115,7 +139,8 @@
             icon="comment"
             id="comment-checkbox"
             title="评论"
-            style="width:32px;height:32px;"
+            style="width:32px;height:32px;color:#06b6d4;"
+            class="text-cyan-500"
             @change="scrollToComments"
           />
           <span class="text-xs text-slate-500 font-medium -mt-1">{{ formatNumber(article.commentCount) }}</span>
@@ -125,13 +150,11 @@
         <!-- 3. 文章正文区域 -->
         <div class="col-span-1 lg:col-span-12 bg-white dark:bg-[#1E1E1E] rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 dark:border-slate-800">
           <article 
-            class="prose prose-lg dark:prose-invert max-w-none 
-                   prose-headings:text-slate-900 dark:prose-headings:text-slate-100
-                   prose-p:text-slate-600 dark:prose-p:text-slate-300
+            class="prose prose-lg prose-slate dark:prose-invert max-w-none
                    prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline
                    prose-img:rounded-xl prose-img:shadow-lg"
             v-html="renderedContent"
-          />
+          ></article>
 
           <!-- 底部信息 -->
           <div class="mt-12 pt-6 border-t border-slate-100 dark:border-slate-700">
@@ -151,6 +174,11 @@
             </p>
           </div>
         </div>
+      </div>
+
+      <!-- 评论区（置于文章主体下方） -->
+      <div class="max-w-5xl mx-auto px-4 md:px-6 py-6 mt-6">
+        <CommentSection :articleId="article.id" />
       </div>
 
       <!-- 移动端底部操作栏 -->
@@ -180,10 +208,14 @@
 
 <script setup lang="ts" name="ArticleDetailView">
 import AnimatedActionButton from '@/components/common/AnimatedActionButton.vue'
-import { ref, computed, onMounted } from 'vue'
+import ArticleTocSidebar from '@/components/common/ArticleTocSidebar.vue'
+import CommentSection from '@/components/common/CommentSection.vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { useNotification } from '@/composables/useNotification'
 import { useRoute, useRouter } from 'vue-router'
 import MarkdownIt from 'markdown-it'
-import axios from 'axios'
+import http from '@/api/http'
 
 // Markdown 渲染器
 const md = new MarkdownIt({ html: true, linkify: true, breaks: true })
@@ -215,6 +247,37 @@ const route = useRoute()
 const router = useRouter()
 
 const loading = ref(true)
+const progress = ref(0)
+let progressTimer: number | null = null
+
+const startProgress = () => {
+  progress.value = 6
+  if (progressTimer) clearInterval(progressTimer)
+  progressTimer = window.setInterval(() => {
+    // 增长到 90% 以内，随机步进以显得自然
+    if (progress.value < 90) {
+      progress.value = Math.min(90, progress.value + Math.random() * 8)
+    }
+  }, 300)
+}
+
+const finishProgress = async () => {
+  progress.value = 100
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
+  // 给出一点时间让用户看到完成动画
+  await new Promise((r) => setTimeout(r, 220))
+  progress.value = 0
+}
+
+onUnmounted(() => {
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
+})
 const articleId = computed(() => route.params.id?.toString() ?? '')
 
 const article = ref<ArticleFrontVO>({
@@ -244,9 +307,17 @@ const renderedContent = computed(() => {
 // 真实 API 请求
 const fetchArticleDetail = async (id: string) => {
   loading.value = true
+  startProgress()
   try {
-    const res = await axios.get(`/front/articles/${id}`)
+    const res = await http.get(`/front/articles/${id}`)
     const data = res.data?.data || {}
+
+    // 兼容：后端可能返回的是未包含当前用户的基础数量（如 likeCount），
+    // 如果后端同时返回 isLike/isCollect 为真，前端展示上按要求向上加 1
+    const serverLikeCount = typeof data.likeCount === 'number' ? data.likeCount : 0
+    const serverCollectCount = typeof data.collectCount === 'number' ? data.collectCount : 0
+    const serverIsLike = !!data.isLike
+    const serverIsCollect = !!data.isCollect
 
     article.value = {
       id: (data.id ?? id).toString(),
@@ -259,12 +330,12 @@ const fetchArticleDetail = async (id: string) => {
       tags: Array.isArray(data.tags) ? data.tags : [],
       isOriginal: typeof data.isOriginal === 'number' ? data.isOriginal : 1,
       isTop: typeof data.isTop === 'number' ? data.isTop : 0,
-      likeCount: typeof data.likeCount === 'number' ? data.likeCount : 0,
+      likeCount: serverIsLike ? serverLikeCount + 1 : serverLikeCount,
       commentCount: typeof data.commentCount === 'number' ? data.commentCount : 0,
-      collectCount: typeof data.collectCount === 'number' ? data.collectCount : 0,
+      collectCount: serverIsCollect ? serverCollectCount + 1 : serverCollectCount,
       viewCount: typeof data.viewCount === 'number' ? data.viewCount : 0,
-      isLike: !!data.isLike,
-      isCollect: !!data.isCollect,
+      isLike: serverIsLike,
+      isCollect: serverIsCollect,
       publishTime: data.publishTime || '',
       updateTime: data.updateTime || '',
       author: data.author || '云坛'
@@ -290,6 +361,7 @@ const fetchArticleDetail = async (id: string) => {
       author: '云坛'
     }
   } finally {
+    await finishProgress()
     loading.value = false
   }
 }
@@ -314,14 +386,72 @@ const formatNumber = (num: number): string => {
 }
 
 // 交互事件
-const handleLike = () => {
-  article.value.isLike = !article.value.isLike
-  article.value.likeCount += article.value.isLike ? 1 : -1
+// handleLike 接受可选的目标 checked 值（由子组件 emit 传入）
+const handleLike = async (checked?: boolean) => {
+  const userStore = useUserStore()
+  const { warning, error } = useNotification()
+  const token = (userStore && userStore.token) || localStorage.getItem('auth_token') || ''
+
+  if (!token) {
+    warning('请先登录', '请先登录后再进行点赞')
+    return
+  }
+
+  const prev = article.value.isLike
+  const newState = typeof checked === 'boolean' ? checked : !prev
+
+  // 乐观更新
+  article.value.isLike = newState
+  article.value.likeCount += newState ? 1 : -1
+
+  try {
+    await http.post(`/front/interacts/like/${article.value.id}`)
+  } catch (e: any) {
+    // 回滚
+    article.value.likeCount += article.value.isLike ? -1 : 1
+    article.value.isLike = prev
+
+    if (e?.response?.status === 401) {
+      try { userStore.logout() } catch (_) {}
+      warning('登录已过期', '请重新登录后再试')
+    } else {
+      error('操作失败', '点赞操作失败，请重试')
+    }
+  }
 }
 
-const handleCollect = () => {
-  article.value.isCollect = !article.value.isCollect
-  article.value.collectCount += article.value.isCollect ? 1 : -1
+// handleCollect 接收可选 checked 参数，保持与 handleLike 一致的交互逻辑
+const handleCollect = async (checked?: boolean) => {
+  const userStore = useUserStore()
+  const { warning, error } = useNotification()
+  const token = (userStore && userStore.token) || localStorage.getItem('auth_token') || ''
+
+  if (!token) {
+    warning('请先登录', '请先登录后再进行收藏')
+    return
+  }
+
+  const prev = article.value.isCollect
+  const newState = typeof checked === 'boolean' ? checked : !prev
+
+  // 乐观更新
+  article.value.isCollect = newState
+  article.value.collectCount += newState ? 1 : -1
+
+  try {
+    await http.post(`/front/interacts/collect/${article.value.id}`)
+  } catch (e: any) {
+    // 回滚
+    article.value.collectCount += article.value.isCollect ? -1 : 1
+    article.value.isCollect = prev
+
+    if (e?.response?.status === 401) {
+      try { userStore.logout() } catch (_) {}
+      warning('登录已过期', '请重新登录后再试')
+    } else {
+      error('操作失败', '收藏操作失败，请重试')
+    }
+  }
 }
 
 const scrollToComments = () => {
@@ -332,18 +462,42 @@ const scrollToComments = () => {
 const goBack = () => router.back()
 
 // 页面加载
+const sidebarVisible = ref(false)
+
 onMounted(() => {
   if (articleId.value) {
     fetchArticleDetail(articleId.value)
   }
+  // 监听滚动，控制目录侧边栏出现/消失
+  const sidebarTrigger = () => {
+    const article = document.querySelector('article')
+    if (!article) return
+    const rect = article.getBoundingClientRect()
+    sidebarVisible.value = rect.top < 200 && rect.bottom > 400
+  }
+  window.addEventListener('scroll', sidebarTrigger)
+  sidebarTrigger()
 })
 </script>
 
 <style scoped>
-/* Markdown 基础样式兜底 */
+/* 顶部进度条样式 */
+.top-progress { height: 10px; display: flex; align-items: center; }
+.top-progress__bar {
+  height: 6px;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(99,102,241,0.95), rgba(34,197,94,0.95));
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(2,6,23,0.12);
+  transition: width 260ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* Markdown 基础样式（保留排版微调，颜色交给 Tailwind 的 prose / dark:prose-invert） */
 :deep(.prose h1) { font-size: 2.25em; margin-top: 2em; margin-bottom: 0.75em; font-weight: 700; }
 :deep(.prose h2) { font-size: 1.75em; margin-top: 1.75em; margin-bottom: 0.75em; font-weight: 600; }
-:deep(.prose p) { margin-bottom: 1.25em; line-height: 1.75; }
+:deep(.prose) { line-height: 1.85; }
+
+/* 代码块和引用的微调由组件控制（不覆盖基础颜色） */
 :deep(.prose pre) { 
   background-color: #f8fafc; 
   padding: 1.25em; 
@@ -352,9 +506,9 @@ onMounted(() => {
   border: 1px solid #e2e8f0;
 }
 :global(.dark) :deep(.prose pre) { 
-  background-color: #1e2937; 
+  background-color: #0f1724; 
   color: #e2e8f0; 
-  border-color: #334155;
+  border-color: #273449;
 }
 :deep(.prose blockquote) { 
   border-left: 4px solid #e2e8f0; 
@@ -362,10 +516,12 @@ onMounted(() => {
   font-style: italic; 
   color: #64748b; 
 }
+:global(.dark) :deep(.prose blockquote) {
+  border-left-color: #6366f1;
+  color: #94a3b8;
+}
 :deep(.prose ul) { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.25em; }
 
-/* 封面图优化后的丝滑放大动画（重点修改部分） */
-.group img {
-  will-change: transform;           /* GPU 加速，让动画更流畅 */
-}
+/* 封面图优化后的丝滑放大动画（GPU hint） */
+.group img { will-change: transform; }
 </style>

@@ -1,5 +1,7 @@
 package com.yuntan.article.domain.dto.admin;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,6 +11,13 @@ import java.util.List;
 
 @Data
 public class ArticleSaveDTO {
+
+    /**
+     * 主键ID
+     */
+    @TableId(type = IdType.ASSIGN_ID)
+    @Schema(description = "文章ID", example = "1")
+    private Long id;
 
     /**
      * 文章标题

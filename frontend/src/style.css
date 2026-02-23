@@ -9,8 +9,19 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #F7F9FE;
+
+  /* 主题变量：浅色为默认，深色在 html.dark 覆盖 */
+  --bg: #F7F9FE;
+  --text-primary: #213547; /* 主文本颜色（浅色） */
+  --text-secondary: rgba(33,53,71,0.6);
+  --muted: rgba(33,53,71,0.45);
+  --card-bg: #ffffff;
+  --btn-bg: #f9f9f9;
+  --btn-text: #213547;
+  --border: rgba(33,53,71,0.08);
+
+  color: var(--text-primary);
+  background-color: var(--bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -39,7 +50,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #F7F9FE;
+  background-color: var(--bg);
   transition: background-color 0.35s ease, color 0.35s ease;
 }
 
@@ -55,7 +66,8 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
   cursor: pointer;
   transition: border-color 0.25s;
   outline: none !important;
@@ -76,21 +88,25 @@ button:focus-visible {
 #app {
   width: 100%;
   min-height: 100vh;
-  background-color: #F7F9FE;
+  background-color: var(--bg);
   text-align: center;
   transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* 在偏好浅色时微调变量（覆盖默认） */
+    --bg: #ffffff;
+    --text-primary: #213547;
+    --text-secondary: rgba(33,53,71,0.6);
+    --btn-bg: #ffffff;
+    --btn-text: #213547;
   }
   a:hover {
     color: #747bff;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: var(--btn-bg);
   }
 }
 
@@ -98,16 +114,22 @@ button:focus-visible {
 html.dark,
 html.dark-mode {
   color-scheme: dark;
-  --text-primary: rgba(255, 255, 255, 0.87);
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-disabled: rgba(255, 255, 255, 0.38);
+  /* 深色模式变量覆盖：背景暗、文本高对比 */
+  --bg: #121212;
+  --text-primary: rgba(248,250,252,0.95);
+  --text-secondary: rgba(248,250,252,0.65);
+  --muted: rgba(248,250,252,0.45);
+  --card-bg: #1e1e1e;
+  --btn-bg: #1a1a1a;
+  --btn-text: #f8fafc;
+  --border: rgba(255,255,255,0.06);
 }
 
 html.dark body,
 html.dark-mode body,
 .dark body,
 .dark-mode body {
-  background-color: #121212;
+  background-color: var(--bg);
   color: var(--text-primary);
 }
 

@@ -47,6 +47,8 @@ public class InteractServiceImpl implements InteractService {
             // 更新Redis计数
             updateLikeCount(articleId, 1);
         }
+        // 删除Redis缓存，确保下次读取时能获取最新数据
+        redisTemplate.delete(RedisConstant.ARTICLE_HASH_PREFIX + articleId);
     }
 
     /**
@@ -75,6 +77,8 @@ public class InteractServiceImpl implements InteractService {
             // 更新Redis计数
             updateCollectCount(articleId, 1);
         }
+        // 删除Redis缓存，确保下次读取时能获取最新数据
+        redisTemplate.delete(RedisConstant.ARTICLE_HASH_PREFIX + articleId);
     }
 
     /**

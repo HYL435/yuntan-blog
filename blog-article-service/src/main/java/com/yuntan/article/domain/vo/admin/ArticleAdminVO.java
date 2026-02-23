@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ArticleAdminVO implements CategorizableVO {
 

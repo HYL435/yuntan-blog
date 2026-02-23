@@ -2,14 +2,17 @@ package com.yuntan.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuntan.common.constant.*;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.common.utils.BeanUtils;
 import com.yuntan.common.utils.OssOptionUtil;
 import com.yuntan.gateway.utils.JwtUtil;
+import com.yuntan.user.domain.dto.admin.UserRoleDTO;
 import com.yuntan.user.domain.dto.front.*;
 import com.yuntan.user.domain.po.User;
+import com.yuntan.user.domain.query.UserPageQuery;
 import com.yuntan.user.domain.vo.front.UserLoginVO;
 import com.yuntan.user.domain.vo.front.UserVO;
 import com.yuntan.user.mapper.UserMapper;
@@ -287,12 +290,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 升级用户为管理员
      */
     @Override
-    public void upgradeAdmin(Long id) {
+    public void upgradeAdmin(UserRoleDTO userRoleDTO) {
 
         // 创建用户对象
         User user = User.builder()
-                .id(id)
-                .role(UserRoleConstant.ROLE_ADMIN)
+                .id(userRoleDTO.getId())
+                .role(userRoleDTO.getRole())
                 .build();
 
         // 更新用户角色
@@ -310,6 +313,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
         return BeanUtils.copyBean(user, UserCommentDTO.class);
     }
+
+    /**
+     * 分页查询用户列表
+     */
+    @Override
+    public Page<User> userPage(UserPageQuery userPageQuery) {
+
+        return this.page(
+                userPageQuery.toMpPage(
+                        userPageQuery.getSortBy(),
+                        userPageQuery.getIsAsc()
+                ),
+                userPageQuery.toWrapper()
+        );
+    }
+
 
     // 根据用户名或邮箱查询用户
     private UserLoginVO selectUserByInfo(User user) {

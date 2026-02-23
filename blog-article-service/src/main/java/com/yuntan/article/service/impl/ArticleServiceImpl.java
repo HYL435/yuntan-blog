@@ -1,5 +1,6 @@
 package com.yuntan.article.service.impl;
 
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.shaded.io.grpc.netty.shaded.io.netty.util.internal.ThreadLocalRandom;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,6 +9,7 @@ import com.yuntan.article.constant.QueryType;
 import com.yuntan.article.constant.RedisConstant;
 import com.yuntan.article.domain.doc.ArticleContentDoc;
 import com.yuntan.article.domain.dto.admin.ArticleSaveDTO;
+import com.yuntan.article.domain.dto.admin.ArticleStatusDTO;
 import com.yuntan.article.domain.po.Article;
 import com.yuntan.article.domain.po.ArticleCategory;
 import com.yuntan.article.domain.po.ArticleTag;
@@ -75,65 +77,57 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     public ArticleFrontVO getArticleById(Long id) {
         String key = RedisConstant.CACHE_KEY_PREFIX + id;
+        ArticleFrontVO articleFrontVO;
 
-        // 先尝试从缓存中获取文章信息
-        // 如果缓存中存在，则直接返回，如果不存在，则从数据库中获取
+        // 1. 尝试从缓存获取
         Map<Object, Object> cacheMap = redisTemplate.opsForHash().entries(key);
 
         if (!cacheMap.isEmpty()) {
-            // 缓存命中，查找文章信息，组装并返回
-            ArticleFrontVO articleFrontVO = BeanUtils.mapToBean(cacheMap, ArticleFrontVO.class);
-            ArticleContentDoc contentDoc = mongoTemplate.findById(articleFrontVO.getMongoId(), ArticleContentDoc.class);
-            assert contentDoc != null;  // 断言非空
-            articleFrontVO.setContent(contentDoc.getContent());
-            return articleFrontVO;
-        }
-
-        // 获取文章信息
-        Article article = this.getById(id);
-        // 转换为前台VO对象
-        if (article == null) {
-            throw new RuntimeException(MessageConstant.ARTICLE_NOT_FOUND);
-        }
-        ArticleFrontVO articleFrontVO = BeanUtils.copyBean(article, ArticleFrontVO.class);
-
-        // 填充分类和标签
-        setCategoryAndTags(articleFrontVO);
-
-        // 判断用户是否登录
-        if (Objects.nonNull(BaseContext.getUserId())) {
-            Long userId = BaseContext.getUserId();
-            // 判断用户是否点赞
-            articleFrontVO.setIsLike(interactMapper.isLike(id, userId) > 0);
-            // 判断用户是否收藏
-            articleFrontVO.setIsLike(interactMapper.isCollect(id, userId) > 0);
+            // 缓存命中
+            articleFrontVO = BeanUtils.mapToBean(cacheMap, ArticleFrontVO.class);
         } else {
-            // 否则，设置用户是否点赞和收藏为false
+            // 缓存未命中，查库
+            Article article = this.getById(id);
+            if (article == null) {
+                throw new RuntimeException(MessageConstant.ARTICLE_NOT_FOUND);
+            }
+            articleFrontVO = BeanUtils.copyBean(article, ArticleFrontVO.class);
+
+            // 填充分类和标签（这些是公共数据，可以放缓存）
+            setCategoryAndTags(articleFrontVO);
+
+            // 写入缓存（注意：这里不应该写入 isLike/isCollect 这种个性化字段，或者写入默认 false）
+            // 建议在 dtoToMap 之前显式设置 false，避免污染公共缓存
+            articleFrontVO.setIsLike(false);
+            articleFrontVO.setIsCollect(false);
+
+            Map<String, Object> dataMap = BeanUtils.dtoToMap(articleFrontVO);
+            Map<String, String> stringMap = dataMap.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> String.valueOf(entry.getValue())));
+
+            redisTemplate.opsForHash().putAll(key, stringMap);
+            Long ttl = calculateTTL(articleFrontVO);
+            redisTemplate.expire(key, ttl, TimeUnit.SECONDS);
+        }
+
+        // 2. 填充文章内容（从 Mongo 获取）
+        ArticleContentDoc contentDoc = mongoTemplate.findById(articleFrontVO.getMongoId(), ArticleContentDoc.class);
+        if (contentDoc != null) {
+            articleFrontVO.setContent(contentDoc.getContent());
+        }
+
+        // 3. 【核心修复】无论缓存是否命中，都要处理个性化状态（点赞/收藏）
+        Long userId = BaseContext.getUserId(); // 假设 BaseContext 能安全处理未登录返回 null
+        if (userId != null) {
+            // 查询当前用户的交互状态
+            articleFrontVO.setIsLike(interactMapper.isLike(id, userId) > 0);
+            articleFrontVO.setIsCollect(interactMapper.isCollect(id, userId) > 0); // ✅ 修正变量名
+        } else {
+            // 未登录默认 false
             articleFrontVO.setIsLike(false);
             articleFrontVO.setIsCollect(false);
         }
 
-        // 转换数据类型，并写入缓存
-        Map<String, Object> dataMap = BeanUtils.dtoToMap(articleFrontVO);
-        Map<String, String> stringMap = dataMap.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> String.valueOf(entry.getValue())
-                ));
-
-        // 回写缓存
-        redisTemplate.opsForHash().putAll(key, stringMap);
-        // 设置缓存过期时间
-        Long ttl = calculateTTL(articleFrontVO);
-        redisTemplate.expire(key, ttl, TimeUnit.SECONDS);
-
-        // 获取文章内容
-        ArticleContentDoc contentDoc = mongoTemplate.findById(articleFrontVO.getMongoId(), ArticleContentDoc.class);
-        assert contentDoc != null;  // 断言非空
-        // 填入文章内容
-        articleFrontVO.setContent(contentDoc.getContent());
-
-        // 返回
         return articleFrontVO;
     }
 
@@ -339,13 +333,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 构建分页参数，获取page对象
         Page<Article> page = query.toMpPage();
 
-
         // 设置查询条件
         LambdaQueryChainWrapper<Article> pageQuery = new LambdaQueryChainWrapper<>(articleMapper)
-                .orderByDesc(Article::getIsTop)
-                .orderByDesc(Article::getUpdateTime);
+                .eq(query.getStatus() != null, Article::getStatus, query.getStatus()) // 状态条件
+                .like(StringUtils.isNotBlank(query.getTitle()), Article::getTitle, query.getTitle()) // 标题模糊查询
+                .eq(query.getIsOriginal() != null, Article::getIsOriginal, query.getIsOriginal()) // 是否原创
 
-        // 查询
+                // 可选择的排序字段和顺序
+                .orderBy(query.getSortBy() != null, query.getIsAsc(), Article::getUpdateTime); // 动态排序
+
+        // 执行查询
         Page<Article> resultPage = pageQuery.page(page);
 
         // 转换为VO对象
@@ -354,8 +351,18 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 获取并设置分类和标签
         articleAdminVOPageDTO.getList().forEach(this::setCategoryAndTags);
 
+        if (query.getCategory() != null) {
+            List<ArticleAdminVO> list = articleAdminVOPageDTO.getList()
+                    .stream()
+                    .filter(articleAdminVO -> Objects.equals(articleAdminVO.getCategory(), query.getCategory()))
+                    .toList();
+
+            articleAdminVOPageDTO.setList(list);
+        }
+
         return articleAdminVOPageDTO;
     }
+
 
     /**
      * 文章置顶
@@ -453,13 +460,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                     throw new BusinessException(MessageConstant.ARTICLE_NOT_FOUND);
                 }
                 key = RedisConstant.CACHE_KEY_PREFIX + byId.getId();
-                if (byId.getCoverImg() != null) {
+                if (byId.getCoverImg() != null && !byId.getCoverImg().equals(DefaultImageURLConstant.DEFAULT_BLOG_COVER_URL)) {
                     // 先删除原来的图片
                     articleOssUtil.deleteFile(byId.getCoverImg());
+                    String image = articleOssUtil.uploadFile(articleSaveDTO.getImageFile(), FilePathConstant.ARTICLE_COVER_PATH);
+                    // 将新的图片上传到OSS中
+                    article.setCoverImg(image);
                 }
-                // 将新的图片上传到OSS中
-                String image = articleOssUtil.uploadFile(articleSaveDTO.getImageFile(), FilePathConstant.ARTICLE_COVER_PATH);
-                article.setCoverImg(image);
             } catch (IOException e) {
                 throw new BusinessException(MessageConstant.UPLOAD_FAILED);
             }
@@ -520,38 +527,22 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
     }
 
-
-
     /**
-     * 发布文章
+     * 更新文章状态
      */
     @Override
-    public void publishArticle(Long id) {
-        String key = RedisConstant.CACHE_KEY_PREFIX + id;
+    public void updateArticleStatus(ArticleStatusDTO articleStatusDTO) {
+        // 构建 Redis 缓存 Key
+        String key = RedisConstant.CACHE_KEY_PREFIX + articleStatusDTO.getId();
 
+        // 更新文章状态
         this.lambdaUpdate()
-                .eq(Article::getId, id)
-                .set(Article::getStatus, ArticleStatusEnum.PUBLISHED.getValue())
-                .set(Article::getPublishTime, LocalDateTime.now())
+                .eq(Article::getId, articleStatusDTO.getId())
+                .set(Article::getStatus, articleStatusDTO.getStatus())
                 .update();
 
+        // 删除缓存
         redisTemplate.delete(key);
-    }
-
-    /**
-     * 私密文章
-     */
-    @Override
-    public void privateArticle(Long id) {
-        String key = RedisConstant.CACHE_KEY_PREFIX + id;
-
-        this.lambdaUpdate()
-                .eq(Article::getId, id)
-                .set(Article::getStatus, ArticleStatusEnum.PRIVATE.getValue())
-                .update();
-
-        redisTemplate.delete(key);
-
     }
 
     // 获取并设置文章分类和标签

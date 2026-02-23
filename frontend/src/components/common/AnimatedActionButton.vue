@@ -42,7 +42,7 @@
         <polygon points="80,80 70,70" style="stroke:#ffd600;fill:#ffd600"/>
       </svg>
       <svg v-if="icon === 'comment'" viewBox="0 0 24 24" class="svg-outline" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#06b6d4" stroke="#06b6d4" />
       </svg>
     </div>
   </div>

@@ -2,6 +2,7 @@ package com.yuntan.article.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yuntan.article.domain.dto.admin.ArticleSaveDTO;
+import com.yuntan.article.domain.dto.admin.ArticleStatusDTO;
 import com.yuntan.article.domain.po.Article;
 import com.yuntan.article.domain.query.ArticleExhibitQuery;
 import com.yuntan.article.domain.query.ArticleManageQuery;
@@ -49,13 +50,9 @@ public interface IArticleService extends IService<Article> {
      */
     void saveArticle(ArticleSaveDTO articleSaveDTO);
 
-    /**
-     * 发布文章
-     */
-    void publishArticle(Long id);
 
     /**
-     * 私有文章
+     * 更新文章状态
      */
-    void privateArticle(Long id);
+    void updateArticleStatus(ArticleStatusDTO articleStatusDTO);
 }

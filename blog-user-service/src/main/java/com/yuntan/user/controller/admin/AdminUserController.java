@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuntan.common.domain.PageDTO;
 import com.yuntan.common.domain.Result;
+import com.yuntan.user.domain.dto.admin.UserRoleDTO;
 import com.yuntan.user.domain.po.User;
 import com.yuntan.user.domain.query.UserPageQuery;
 import com.yuntan.user.domain.vo.admin.AdminUserVO;
@@ -31,9 +32,13 @@ public class AdminUserController {
     @GetMapping("/page")
     public Result<PageDTO<AdminUserVO>> pageUser(UserPageQuery userPageQuery) {
 
+        log.info("接收到的 role 参数: {}", userPageQuery.getRole());
+
         log.info("分页查询用户列表，查询参数：{}", userPageQuery);
 
-        Page<User> result = userService.page(userPageQuery.toMpPage(userPageQuery.getSortBy(), userPageQuery.getIsAsc()));
+        //userService.page(userPageQuery.toMpPage(userPageQuery.getSortBy(), userPageQuery.getIsAsc()));
+
+        Page<User> result = userService.userPage(userPageQuery);
 
         return Result.ok(PageDTO.of(result, AdminUserVO.class));
     }
@@ -59,11 +64,11 @@ public class AdminUserController {
     }
 
     @Schema(description = "提升用户为管理员")
-    @PutMapping("/upgrade/{id}")
-    public Result<Void> upgradeAdmin(@PathVariable Long id) {
-        log.info("提升用户为管理员，用户ID：{}", id);
+    @PutMapping("/upgrade")
+    public Result<Void> upgradeAdmin(@RequestBody UserRoleDTO userRoleDTO) {
+        log.info("提升用户为管理员，用户ID：{}", userRoleDTO);
 
-        userService.upgradeAdmin(id);
+        userService.upgradeAdmin(userRoleDTO);
 
         return Result.ok();
     }
