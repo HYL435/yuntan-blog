@@ -35,7 +35,7 @@
               <span>内容管理</span>
             </template>
             <el-menu-item index="/admin/articles">文章管理</el-menu-item>
-            <el-menu-item index="/admin/category">分类管理</el-menu-item>
+            <el-menu-item index="/admin/categories">分类管理</el-menu-item>
             <el-menu-item index="/admin/tag">标签管理</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="interaction">
@@ -120,10 +120,10 @@ const userStore = useUserStore()
 const activeMenu = computed(() => route.path)
 const breadcrumbName = computed(() => {
   // 可根据 route.name 或 path 定制面包屑
-  const map: Record<string, string> = {
+    const map: Record<string, string> = {
     '/admin/dashboard': '仪表盘',
     '/admin/articles': '文章管理',
-    '/admin/category': '分类管理',
+    '/admin/categories': '分类管理',
     '/admin/tag': '标签管理',
     '/admin/comment': '评论管理',
     '/admin/guestbook': '留言管理',

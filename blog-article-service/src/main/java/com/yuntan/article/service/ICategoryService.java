@@ -2,6 +2,7 @@ package com.yuntan.article.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yuntan.article.domain.dto.admin.CategoryDTO;
+import com.yuntan.article.domain.dto.admin.CategoryStatusDTO;
 import com.yuntan.article.domain.dto.admin.CategoryUpdateDTO;
 import com.yuntan.article.domain.po.Category;
 import com.yuntan.article.domain.vo.admin.CategoryContentVO;
@@ -40,5 +41,10 @@ public interface ICategoryService extends IService<Category> {
     /**
      * 修改分类状态
      */
-    void changeCategoryStatus(Long id, Integer status);
+    void changeCategoryStatus(CategoryStatusDTO categoryStatusDTO);
+
+    /**
+     * 删除分类
+     */
+    void removeCategoryById(Long id);
 }

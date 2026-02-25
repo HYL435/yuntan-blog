@@ -12,7 +12,9 @@
     "@element-plus/icons-vue": "^2.3.2",
     "axios": "^1.13.4",
     "element-plus": "^2.13.2",
+    "highlight.js": "^11.11.1",
     "markdown-it": "^14.1.1",
+    "md-editor-v3": "^6.3.1",
     "pinia": "^3.0.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
@@ -20,6 +22,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.18",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.10.1",

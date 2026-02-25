@@ -1,13 +1,11 @@
 package com.yuntan.article.domain.dto.admin;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -16,18 +14,14 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @Schema(description = "标签实体")
-public class TagDTO implements Serializable {
+public class TagStatusDTO {
 
     /**
-     * 标签名称
+     * 主键ID
      */
-    @Schema(
-            description = "标签名称",
-            example = "Java",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            maxLength = 50
-    )
-    private String tagName;
+    @TableId(type = IdType.ASSIGN_ID)
+    @Schema(description = "标签ID", example = "1")
+    private Long id;
 
     /**
      * 状态：0-禁用，1-启用
@@ -39,5 +33,4 @@ public class TagDTO implements Serializable {
             defaultValue = "1"
     )
     private Integer status;
-
 }

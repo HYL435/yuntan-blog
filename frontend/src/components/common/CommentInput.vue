@@ -7,10 +7,10 @@
           v-model="value"
           :placeholder="placeholder"
           :id="id"
-          class="w-full min-h-[80px] max-h-[300px] rounded-xl rounded-b-none px-5 py-4 bg-white/5 dark:bg-black text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/60 border-0 outline-none resize-y focus:ring-0 focus:outline-none leading-[1.4]"
+          class="w-full min-h-[120px] max-h-[400px] rounded-xl rounded-b-none px-5 py-5 bg-white dark:bg-[#081424] text-slate-900 dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-400/60 border border-gray-200 dark:border-[#24303a] outline-none resize-y focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500 focus:border-blue-400 leading-[1.5]"
         ></textarea>
 
-        <div class="h-14 bg-transparent rounded-b-xl">
+        <div class="h-16 bg-transparent rounded-b-xl">
           <div class="absolute left-3 bottom-4 flex items-center gap-3">
             <label class="cursor-pointer rounded-lg p-2 bg-white/5 hover:bg-white/10">
               <input class="hidden" type="file" @change="onFileChange" />
@@ -21,18 +21,24 @@
 
             <div class="relative">
               <button
-                class="rounded-full flex items-center gap-2 px-4 py-2 border h-10 cursor-pointer bg-yellow-400/10 hover:bg-yellow-400/20 border-yellow-300 text-yellow-500"
+                class="rounded-full flex items-center gap-2 px-3 py-2 border h-10 cursor-pointer bg-transparent hover:bg-gray-100 dark:hover:bg-[#0b1220] border-gray-200 dark:border-[#1f2937] text-gray-600 dark:text-gray-200"
                 type="button"
                 @click.stop="togglePicker"
                 title="插入表情"
+                aria-label="插入表情"
               >
-                <div class="w-8 h-8 flex items-center justify-center shrink-0 rounded-full bg-yellow-400 text-white text-xl">😊</div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                  <path d="M9 10h.01"></path>
+                  <path d="M15 10h.01"></path>
+                </svg>
               </button>
 
               <transition name="picker">
-                <div v-show="showPicker" class="absolute left-0 top-full mt-2 z-50 w-[1200px] max-w-[95vw] bg-white dark:bg-[#0b1220] rounded-lg shadow-xl border border-slate-100 dark:border-slate-800 p-3">
-                  <div class="flex gap-x-[5px] gap-y-[1px] flex-nowrap sm:flex-wrap sm:justify-start sm:items-start sm:gap-x-[5px] sm:gap-y-[1px] overflow-x-auto py-0">
-                    <button v-for="emo in emojis" :key="emo" class="w-8 h-8 p-0 flex items-center justify-center rounded-sm text-lg leading-none hover:bg-slate-100 dark:hover:bg-slate-800" @click.stop="onPick(emo)">{{ emo }}</button>
+                <div v-show="showPicker" class="absolute left-0 top-full mt-2 z-50 max-w-[95vw] w-auto bg-white dark:bg-[#0b1220] rounded-lg shadow-xl border border-slate-100 dark:border-slate-800 p-2 overflow-x-auto whitespace-nowrap">
+                  <div class="flex gap-x-[6px] items-center flex-nowrap py-0 whitespace-nowrap">
+                    <button v-for="emo in emojis" :key="emo" class="w-6 h-6 p-0 flex items-center justify-center rounded-sm text-base leading-none hover:bg-slate-100 dark:hover:bg-slate-800" @click.stop="onPick(emo)">{{ emo }}</button>
                   </div>
                 </div>
               </transition>
@@ -56,7 +62,7 @@
 <script setup lang="ts">
 import { ref, watch, defineEmits, defineProps, nextTick, onMounted, onUnmounted } from 'vue'
 
-const emits = defineEmits(['submit', 'attach', 'cancel'])
+const emits = defineEmits(['submit', 'cancel'])
 const props = defineProps({
   placeholder: { type: String, default: '写下你的评论...' },
   id: { type: String, default: 'comment-input' },
@@ -106,17 +112,30 @@ onUnmounted(() => document.removeEventListener('click', handleDocClick))
 
 watch(() => props.valueModel, (v) => { value.value = v })
 
+const attachedFile = ref<File | null>(null)
 const onFileChange = (e: Event) => {
   const input = e.target as HTMLInputElement
   if (input?.files && input.files.length) {
-    emits('attach', input.files[0])
+    attachedFile.value = input.files[0]
   }
 }
 
 const onSubmit = () => {
-  if (!value.value.trim()) return
-  emits('submit', value.value.trim())
+  const text = value.value.trim()
+  if (!text && !attachedFile.value) return
+  if (text.length > 1000) {
+    // 简单前端校验，阻止过长提交
+    alert('评论不能超过 1000 字')
+    return
+  }
+  emits('submit', { content: text, file: attachedFile.value })
   value.value = ''
+  attachedFile.value = null
+  // 清 file input visual - find input and clear
+  nextTick(() => {
+    const inp = (rootRef.value as HTMLElement)?.querySelector('input[type=file]') as HTMLInputElement | null
+    if (inp) inp.value = ''
+  })
 }
 </script>
 

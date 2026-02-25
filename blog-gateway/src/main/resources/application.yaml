@@ -95,3 +95,5 @@ yuntan:
       - /front/categories/**
       - /front/tags/**
       - /front/interacts/view/**
+      # 评论相关路径
+      - /front/comments/{articleId}

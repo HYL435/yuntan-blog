@@ -38,4 +38,15 @@ public class CategoryDTO {
     )
     private Long sort;
 
+    /**
+     * 状态：0-禁用，1-启用
+     */
+    @Schema(
+            description = "状态：0-禁用，1-启用",
+            example = "1",
+            allowableValues = {"0", "1"},
+            defaultValue = "1"
+    )
+    private Integer status;
+
 }

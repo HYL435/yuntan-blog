@@ -1,13 +1,13 @@
 package com.yuntan.article.controller.admin;
 
 import com.yuntan.article.domain.dto.admin.CategoryDTO;
+import com.yuntan.article.domain.dto.admin.CategoryStatusDTO;
 import com.yuntan.article.domain.dto.admin.CategoryUpdateDTO;
 import com.yuntan.article.domain.vo.admin.CategoryContentVO;
 import com.yuntan.article.domain.vo.admin.CategoryVO;
 import com.yuntan.article.service.ICategoryService;
 import com.yuntan.common.domain.Result;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,21 +70,21 @@ public class AdminCategoryController {
 
 
     @Operation(summary = "修改分类状态")
-    @PutMapping("status")
-    public Result<Void> changeCategoryStatus(Long id, Integer status) {
-        log.info("修改分类状态 {}， 状态为 {}",  id,  status);
+    @PutMapping("/status")
+    public Result<Void> changeCategoryStatus(@RequestBody CategoryStatusDTO categoryStatusDTO) {
+        log.info("修改分类状态 {}， 状态为 {}",  categoryStatusDTO.getId(), categoryStatusDTO.getStatus());
 
-        categoryService.changeCategoryStatus(id,  status);
+        categoryService.changeCategoryStatus(categoryStatusDTO);
 
         return Result.ok();
     }
 
     @Operation(summary = "删除分类")
-    @PutMapping("deleted/{id}")
+    @PutMapping("/deleted/{id}")
     public Result<Void> deleteCategory(@PathVariable Long id) {
         log.info("删除分类 {}",  id);
 
-        categoryService.removeById(id);
+        categoryService.removeCategoryById(id);
 
         return Result.ok();
     }

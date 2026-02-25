@@ -2,6 +2,7 @@ package com.yuntan.user.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yuntan.api.dto.UserCommentDTO;
 import com.yuntan.user.domain.dto.admin.UserRoleDTO;
 import com.yuntan.user.domain.dto.front.*;
 import com.yuntan.user.domain.po.User;
@@ -9,6 +10,9 @@ import com.yuntan.user.domain.query.UserPageQuery;
 import com.yuntan.user.domain.vo.front.UserLoginVO;
 import com.yuntan.user.domain.vo.front.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
+import java.util.Set;
 
 public interface IUserService extends IService<User> {
 
@@ -66,4 +70,9 @@ public interface IUserService extends IService<User> {
      * 分页查询用户列表
      */
     Page<User> userPage(UserPageQuery userPageQuery);
+
+    /**
+     * 批量获取用户评论
+     */
+    List<UserCommentDTO> getUserComments(Set<Long> userIds);
 }

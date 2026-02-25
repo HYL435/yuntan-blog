@@ -13,4 +13,15 @@ public interface CommentMapper extends BaseMapper<Comment> {
      */
     @Select("select * from comment where parent_id = #{parentId} and status = 1 and deleted = 0 order by create_time desc")
     List<Comment> selectByParentId(Long parentId);
+
+    /**
+     * 根据父评论ID列表查询子评论
+     */
+    List<Comment> selectByParentIds(List<Long> parentIds);
+
+    /**
+     * 根据文章ID查询评论数量
+     */
+    @Select("select count(*) from comment where article_id = #{articleId} and status = 1 and deleted = 0")
+    Integer countComments(Long articleId);
 }

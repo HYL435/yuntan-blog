@@ -2,6 +2,7 @@ package com.yuntan.article.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuntan.article.domain.dto.admin.TagDTO;
+import com.yuntan.article.domain.dto.admin.TagStatusDTO;
 import com.yuntan.article.domain.dto.admin.TagUpdateDTO;
 import com.yuntan.article.domain.po.Tag;
 import com.yuntan.article.domain.vo.admin.TagContentVO;
@@ -83,13 +84,13 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements ITagS
      * 修改标签状态
      */
     @Override
-    public void changeTagStatus(Long id, Integer status) {
+    public void changeTagStatus(TagStatusDTO tagStatusDTO) {
 
-        status = Objects.equals(status, StatusConstant.ENABLE) ? StatusConstant.DISABLE : StatusConstant.ENABLE;
+//        status = Objects.equals(status, StatusConstant.ENABLE) ? StatusConstant.DISABLE : StatusConstant.ENABLE;
 
         this.lambdaUpdate()
-                .eq(Tag::getId, id)
-                .set(Tag::getStatus, status)
+                .eq(Tag::getId, tagStatusDTO.getId())
+                .set(Tag::getStatus, tagStatusDTO.getStatus())
                 .update();
     }
 }

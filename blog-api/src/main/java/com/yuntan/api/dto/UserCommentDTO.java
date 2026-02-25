@@ -1,10 +1,20 @@
 package com.yuntan.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserCommentDTO {
+
+    /**
+    * 用户ID
+     */
+    @Schema(description = "用户ID", example = "1")
+    private Long UserId;
 
     /**
      * 昵称

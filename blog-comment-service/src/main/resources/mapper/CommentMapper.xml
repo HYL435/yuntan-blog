@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuntan.comment.mapper.CommentMapper">
+
+<!--    根据父评论ID列表查询子评论-->
+    <select id="selectByParentIds" resultType="com.yuntan.comment.domain.po.Comment">
+        select * from comment where parent_id in
+        <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+            #{parentId}
+        </foreach>
+        and status = 1
+        and deleted = 0
+        order by create_time desc
+    </select>
+</mapper>

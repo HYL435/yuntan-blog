@@ -1,6 +1,7 @@
 package com.yuntan.article.controller.admin;
 
 import com.yuntan.article.domain.dto.admin.TagDTO;
+import com.yuntan.article.domain.dto.admin.TagStatusDTO;
 import com.yuntan.article.domain.dto.admin.TagUpdateDTO;
 import com.yuntan.article.domain.vo.admin.TagContentVO;
 import com.yuntan.article.domain.vo.admin.TagVO;
@@ -70,10 +71,10 @@ public class AdminTagController {
 
     @Operation(summary = "修改标签状态")
     @PutMapping("status")
-    public Result<Void> changeTagStatus(Long id, Integer status) {
-        log.info("修改标签状态 {}， 状态为 {}", id, status);
+    public Result<Void> changeTagStatus(@RequestBody TagStatusDTO tagStatusDTO) {
+        log.info("修改标签状态 {}， 状态为 {}", tagStatusDTO.getId(), tagStatusDTO.getStatus());
 
-        tagService.changeTagStatus(id, status);
+        tagService.changeTagStatus(tagStatusDTO);
 
         return Result.ok();
     }

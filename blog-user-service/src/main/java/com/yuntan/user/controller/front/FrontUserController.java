@@ -1,5 +1,6 @@
 package com.yuntan.user.controller.front;
 
+import com.yuntan.api.dto.UserCommentDTO;
 import com.yuntan.common.domain.Result;
 import com.yuntan.user.domain.dto.front.*;
 import com.yuntan.user.domain.vo.front.UserLoginVO;
@@ -11,6 +12,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Tag(description = "前台用户相关接口", name = "用户管理")
@@ -103,5 +107,15 @@ public class FrontUserController {
         UserCommentDTO userComment = userService.getUserComment(id);
 
         return Result.ok(userComment);
+    }
+
+    @Operation(summary = "批量获取用户评论信息", description = "根据用户ID列表批量获取用户评论信息")
+    @PostMapping("/comment/batch")
+    public Result<List<UserCommentDTO>> getUserComments(@RequestBody Set<Long> userIds) {
+        log.info("批量获取评论用户信息，用户ID列表：{}", userIds);
+
+        List<UserCommentDTO> userComments = userService.getUserComments(userIds);
+
+        return Result.ok(userComments);
     }
 }

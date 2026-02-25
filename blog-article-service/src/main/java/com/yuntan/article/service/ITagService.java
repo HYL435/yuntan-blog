@@ -2,6 +2,7 @@ package com.yuntan.article.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yuntan.article.domain.dto.admin.TagDTO;
+import com.yuntan.article.domain.dto.admin.TagStatusDTO;
 import com.yuntan.article.domain.dto.admin.TagUpdateDTO;
 import com.yuntan.article.domain.po.Tag;
 import com.yuntan.article.domain.vo.admin.TagContentVO;
@@ -40,5 +41,5 @@ public interface ITagService extends IService<Tag> {
     /**
      * 修改标签状态
      */
-    void changeTagStatus(Long id, Integer status);
+    void changeTagStatus(TagStatusDTO tagStatusDTO);
 }

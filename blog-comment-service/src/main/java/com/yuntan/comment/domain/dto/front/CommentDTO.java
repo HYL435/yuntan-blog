@@ -62,11 +62,10 @@ public class CommentDTO implements Serializable {
     private String content;
 
     /**
-     * 评论URL
+     * 评论附带图片
      */
     @Schema(
-            description = "评论URL",
-            example = "https://example.com/cover.jpg",
+            description = "评论附带图片",
             maxLength = 500
     )
     private MultipartFile imageFile;

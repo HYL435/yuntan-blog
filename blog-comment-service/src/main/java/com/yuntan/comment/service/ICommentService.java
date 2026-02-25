@@ -18,4 +18,9 @@ public interface ICommentService extends IService<Comment> {
      * 获取评论列表
      */
     List<CommentVO> listComments(Long articleId);
+
+    /**
+     * 获取评论数量
+     */
+    Integer countComments(Long articleId);
 }

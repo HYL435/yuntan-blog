@@ -369,6 +369,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      */
     @Override
     public void articleTop(Long id, Integer top) {
+        // 构建 Redis 缓存 Key
+        String key = RedisConstant.CACHE_KEY_PREFIX + id;
 
         top = Objects.equals(top, ArticleTopStatusEnum.TOP.getValue()) ? ArticleTopStatusEnum.NOT_TOP.getValue() : ArticleTopStatusEnum.TOP.getValue();
 
@@ -376,6 +378,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 .eq(Article::getId, id)
                 .set(Article::getIsTop, top)
                 .update();
+
+        // 删除缓存
+        redisTemplate.delete(key);
 
     }
 

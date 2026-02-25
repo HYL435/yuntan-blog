@@ -1,13 +1,13 @@
 package com.yuntan.user.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yuntan.api.dto.UserCommentDTO;
 import com.yuntan.common.constant.*;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.common.utils.BeanUtils;
-import com.yuntan.common.utils.OssOptionUtil;
 import com.yuntan.gateway.utils.JwtUtil;
 import com.yuntan.user.domain.dto.admin.UserRoleDTO;
 import com.yuntan.user.domain.dto.front.*;
@@ -27,11 +27,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -327,6 +330,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 ),
                 userPageQuery.toWrapper()
         );
+    }
+
+    /**
+     * 批量获取用户评论
+     */
+    @Override
+    public List<UserCommentDTO> getUserComments(Set<Long> userIds) {
+        // 1. 判空
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 查数据库
+        List<User> users = userMapper.selectByIds(userIds);
+
+        if (users == null || users.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 3. 转换并【手动赋值 ID】
+        // 这一步是修复 "未知用户" 的关键！
+        return users.stream().map(user -> {
+            UserCommentDTO dto = new UserCommentDTO();
+            // 拷贝 username, nickname, image 等同名字段
+            BeanUtils.copyProperties(user, dto);
+
+            // 【关键修复】手动把 User 的 id 赋值给 DTO 的 userId
+            // 因为 BeanUtils 无法自动把 id 拷贝给 userId
+            dto.setUserId(user.getId());
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 
 

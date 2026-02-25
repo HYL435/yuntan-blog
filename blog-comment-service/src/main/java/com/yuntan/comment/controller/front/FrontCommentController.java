@@ -33,7 +33,7 @@ public class FrontCommentController {
     }
 
 
-    @PostMapping("/{articleId}")
+    @GetMapping("/{articleId}")
     @Operation(summary = "查询文章下的评论")
     public Result<List<CommentVO>> listComments(@PathVariable Long articleId) {
 
@@ -42,6 +42,17 @@ public class FrontCommentController {
         List<CommentVO> commentVOS = commentService.listComments(articleId);
 
         return Result.ok(commentVOS);
+    }
+
+    @GetMapping("/{articleId}/count")
+    @Operation(summary = "查询文章下的评论数量")
+    public Result<Integer> countComments(@PathVariable Long articleId) {
+
+        log.info("查询文章下的评论数量，文章ID：{}", articleId);
+
+        Integer count = commentService.countComments(articleId);
+
+        return Result.ok(count);
     }
 
 }

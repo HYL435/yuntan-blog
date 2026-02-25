@@ -23,7 +23,25 @@ http.interceptors.request.use(
         ;(config.headers as any).Authorization = token;
         ;(config.headers as any)['authorization'] = token;
       }
+      // 如果请求体是 FormData，删除默认 Content-Type，让浏览器自动设置带 boundary 的 multipart header
+      try {
+        if (config.data && typeof FormData !== 'undefined' && config.data instanceof FormData) {
+          if (config.headers) {
+            delete (config.headers as any)['Content-Type'];
+            delete (config.headers as any)['content-type'];
+          }
+        }
+      } catch (e) {}
+
       console.debug('[http] 请求:', config.method, config.url, 'HasAuthorization=', !!token)
+      // 如果是 /front/comments 相关请求，打印调用栈帮助定位谁发起了 GET /front/comments
+      try {
+        if (typeof config.url === 'string' && config.url.includes('/front/comments')) {
+          console.groupCollapsed('[http] 调试 /front/comments 调用栈]')
+          console.trace()
+          console.groupEnd()
+        }
+      } catch (e) {}
     } catch (err) {
       // 忽略日志错误，继续请求
     }
