@@ -84,6 +84,7 @@ yuntan:
       - /front/users/login/**
       - /front/users/register/**
       - /front/users/forgetPassword
+      - /front/users/emailCode
       - /docs/**
       - /swagger-ui/**
       - /v3/api-docs/**

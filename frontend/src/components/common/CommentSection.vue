@@ -301,40 +301,38 @@ const submitComment = async (payload: string | { content: string, file?: File | 
 
   posting.value = true
   
-  // 构建 FormData
-  const fd = new FormData()
-  fd.append('articleId', String(props.articleId))
-  fd.append('content', content.trim())
-  
-  if (file) {
-    fd.append('imageFile', file)
-  }
-
-  // 如果是回复，添加 parentId
-  if (isReply && replyState.rootId) {
-    // 后端逻辑：parentId 存的是根评论ID。
-    // 具体的“回复给谁” (toUserId) 通常由后端根据当前登录用户和 parentId 上下文处理，
-    // 或者需要前端显式传 toUserId。根据你的 VO，CommentChildVO 有 parentId。
-    // 这里假设传 rootId 作为 parentId 即可挂载到该楼层。
-    fd.append('parentId', replyState.rootId)
-    
-    // 如果后端需要知道具体回复给谁(toUserId)，这里可能还需要根据 showId 找到对应的 userId 传过去
-    // 假设你的后端逻辑是：如果传了 parentId，就是回复该父评论。
-    // 如果是楼中楼，通常后端会处理 toUser。此处按你的旧逻辑只传 parentId。
-  }
-
+  // 构建要发送到后端的对象。注意：后端对 /front/comments 目前更可靠地接受 JSON。
   try {
-    await postComment(fd)
+    // 先上传图片（如果有），然后携带返回的图片 URL 一并以 JSON 提交评论，避免 multipart 导致 415
+    const payload: Record<string, any> = {
+      articleId: String(props.articleId),
+      content: content.trim(),
+    }
+
+    if (isReply && replyState.rootId) {
+      payload.parentId = replyState.rootId
+    }
+
+    if (file) {
+      const upFd = new FormData()
+      upFd.append('file', file)
+      // 使用已有的上传接口（与文章封面、编辑器上传保持一致）
+      const upRes = await http.post('/admin/upload', upFd)
+      const upData = upRes.data?.data || upRes.data
+      const imageUrl = typeof upData === 'string' ? upData : upData?.url
+      if (!imageUrl) throw new Error('图片上传失败')
+      payload.image = imageUrl
+    }
+
+    await postComment(payload)
     success('发布成功', '你的评论已发布')
-    
-    // 清理状态
+
     if (isReply) cancelReply()
-    
-    // 重新获取列表 (比前端手动模拟插入更可靠，尤其是涉及楼中楼结构)
     await fetchComments()
   } catch (e: any) {
     console.error(e)
-    error('发布失败', e.response?.data?.msg || '网络异常，请重试')
+    const msg = e?.response?.data?.msg || e?.message || '网络异常，请重试'
+    error('发布失败', msg)
   } finally {
     posting.value = false
   }

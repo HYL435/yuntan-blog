@@ -88,4 +88,9 @@ public class BusinessException extends RuntimeException {
     public static BusinessException internalError(String message) {
         return new BusinessException(50000, MessageConstant.SYSTEM_ERROR + message, 500);
     }
+
+    // 邮箱不存在
+    public static Exception emailNotExist(String email) {
+        return new BusinessException(40003, email + MessageConstant.EMAIL_NOT_EXIST, 400);
+    }
 }

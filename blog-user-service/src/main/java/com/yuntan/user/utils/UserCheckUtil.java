@@ -3,6 +3,7 @@ package com.yuntan.user.utils;
 import com.yuntan.common.constant.MessageConstant;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.user.check.UserInfoCheck;
+import com.yuntan.user.domain.dto.front.ForgetUserPwdDTO;
 import com.yuntan.user.domain.dto.front.UpdateUserPwdDTO;
 import com.yuntan.user.domain.po.User;
 import org.springframework.stereotype.Component;
@@ -66,6 +67,39 @@ public class UserCheckUtil {
         // 2. 密码强度验证
         if (!UserInfoCheck.isValidPassword(updateUserPwdDTO.getNewPassword()) &&
                 !UserInfoCheck.isValidPassword(updateUserPwdDTO.getOldPassword())) {
+            throw BusinessException.badRequest(MessageConstant.PASSWORD_STRENGTH_INSUFFICIENT);
+        }
+
+    }
+
+    /**
+     * 邮箱格式校验
+     */
+    public void emailCheck(String email) {
+
+        if (!UserInfoCheck.isValidEmail(email)) {
+            throw BusinessException.badRequest(MessageConstant.EMAIL_FORMAT_ERROR);
+        }
+
+    }
+
+    /**
+     * 忘记密码参数校验
+     */
+    public void forgetUserPasswordCheck(ForgetUserPwdDTO forgetUserPwdDTO) {
+
+        // 1. 参数基础校验
+        if (forgetUserPwdDTO == null) {
+            throw BusinessException.badRequest(MessageConstant.USER_INFO_INCOMPLETE);
+        }
+        if (!StringUtils.hasText(forgetUserPwdDTO.getEmail()) ||
+                !StringUtils.hasText(forgetUserPwdDTO.getNewPassword()) ||
+                !StringUtils.hasText(forgetUserPwdDTO.getCode())) {
+            throw BusinessException.badRequest(MessageConstant.USER_INFO_INCOMPLETE);
+        }
+
+        // 2. 密码强度验证
+        if (!UserInfoCheck.isValidPassword(forgetUserPwdDTO.getNewPassword())) {
             throw BusinessException.badRequest(MessageConstant.PASSWORD_STRENGTH_INSUFFICIENT);
         }
 

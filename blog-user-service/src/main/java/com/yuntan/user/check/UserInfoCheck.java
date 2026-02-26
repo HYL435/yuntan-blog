@@ -73,7 +73,7 @@ public class UserInfoCheck {
     /**
      * 邮箱格式验证
      */
-    private static boolean isValidEmail(String email) {
+    public static boolean isValidEmail(String email) {
         if (!StringUtils.hasText(email)) return true; // 为空时不验证格式
         return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
     }

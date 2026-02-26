@@ -44,7 +44,7 @@ public interface IUserService extends IService<User> {
     /**
      * 用户忘记密码
      */
-    void forgetUserPassword(ForgetUserPwdDTO forgetUserPwdDTO);
+    void forgetUserPassword(ForgetUserPwdDTO forgetUserPwdDTO) throws Exception;
 
     /**
      * 用户登出
@@ -75,4 +75,9 @@ public interface IUserService extends IService<User> {
      * 批量获取用户评论
      */
     List<UserCommentDTO> getUserComments(Set<Long> userIds);
+
+    /**
+     * 发送邮箱验证码
+     */
+    void sendEmailCode(String email) throws Exception;
 }

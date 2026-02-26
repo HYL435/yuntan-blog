@@ -80,10 +80,20 @@ public class FrontUserController {
 
     @Operation(summary = "忘记密码", description = "用户忘记密码后的处理")
     @PutMapping("/forgetPassword")
-    public Result<Void> forgetUserPassword(@RequestBody ForgetUserPwdDTO forgetUserPwdDTO) {
+    public Result<Void> forgetUserPassword(@RequestBody ForgetUserPwdDTO forgetUserPwdDTO) throws Exception {
         log.info("忘记密码: {}", forgetUserPwdDTO);
 
         userService.forgetUserPassword(forgetUserPwdDTO);
+
+        return Result.ok();
+    }
+
+    @Operation(summary = "发送邮箱验证码", description = "用户注册或忘记密码时发送邮箱验证码")
+    @PostMapping("/emailCode")
+    public Result<Void> sentEmailCode(@RequestParam String email) throws Exception {
+        log.info("发送邮箱验证码: {}", email);
+
+        userService.sendEmailCode(email);
 
         return Result.ok();
     }

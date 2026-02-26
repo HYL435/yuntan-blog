@@ -1,11 +1,13 @@
 package com.yuntan.user.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuntan.api.dto.UserCommentDTO;
 import com.yuntan.common.constant.*;
+import com.yuntan.common.domain.EmailMsgDTO;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.common.utils.BeanUtils;
 import com.yuntan.gateway.utils.JwtUtil;
@@ -23,6 +25,10 @@ import com.yuntan.user.utils.UserCheckUtil;
 import com.yuntan.user.utils.UserOssUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +43,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
@@ -54,6 +61,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final TokenBlacklistUtil tokenBlacklistUtil;
     // token解析工具
     private final TokenResolveUtil tokenResolveUtil;
+    // RabbitMQ 模板
+    public final RedisTemplate<String, Object> redisTemplate;
+    public final  RabbitTemplate rabbitTemplate;
 
     /**
      * 用户注册
@@ -232,13 +242,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * TODO 用户忘记密码
      */
     @Override
-    public void forgetUserPassword(ForgetUserPwdDTO forgetUserPwdDTO) {
+    public void forgetUserPassword(ForgetUserPwdDTO forgetUserPwdDTO) throws Exception {
 
         // 参数校验
-
+        userCheckUtil.forgetUserPasswordCheck(forgetUserPwdDTO);
         // 验证邮箱是否存在
+        if (!isEmailExist(forgetUserPwdDTO.getEmail())) {
+            throw BusinessException.emailNotExist(forgetUserPwdDTO.getEmail());
+        }
 
-        // TODO 验证码校验（略）
+        // 1. 从 Redis 获取验证码
+        String redisKey = "code:reset:" + forgetUserPwdDTO.getEmail();
+        String cachedCode = (String) redisTemplate.opsForValue().get(redisKey);
+
+        // 2. 校验
+        if (cachedCode == null) {
+            throw new RuntimeException("验证码已过期，请重新获取");
+        }
+        if (!cachedCode.equals(forgetUserPwdDTO.getCode())) {
+            throw new RuntimeException("验证码错误");
+        }
+
 
         // 加密新密码
         String newEncryptedPassword = encryptedPassword(forgetUserPwdDTO.getNewPassword());
@@ -248,6 +272,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         wrapper.eq(User::getEmail, forgetUserPwdDTO.getEmail().trim())
                 .eq(User::getDeleted, DeleteStatusConstant.NOT_DELETED);
 
+        User updateUser = User.builder()
+                .password(newEncryptedPassword)
+                .build();
+
+        this.update(updateUser, wrapper);
     }
 
     /**
@@ -362,6 +391,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 发送邮箱验证码
+     */
+    @Override
+    public void sendEmailCode(String email) throws Exception {
+
+        // 验证邮箱格式
+        userCheckUtil.emailCheck(email);
+
+        // 验证邮箱是否存在
+        if (!isEmailExist(email)) {
+            throw BusinessException.emailNotExist(email);
+        }
+
+        // 生成验证码
+        String code = RandomUtil.randomNumbers(6);
+
+        // 将验证码存入Redis，设置过期时间（例如5分钟）
+        String redisKey = "email:code:" + email.trim();
+        redisTemplate.opsForValue().set(redisKey, code, 5, java.util.concurrent.TimeUnit.MINUTES);
+
+        // 封装消息对象
+        EmailMsgDTO emailMsgDTO = new EmailMsgDTO(email, code, 2);
+
+        // 发送消息到RabbitMQ
+        rabbitTemplate.convertAndSend(MqConstants.EMAIL_EXCHANGE, MqConstants.EMAIL_ROUTING_KEY, emailMsgDTO);
+
+        log.info("验证码已生成并推送到MQ，邮箱：{}，验证码：{}", email, code);
     }
 
 

@@ -62,7 +62,6 @@ services:
     networks:
       - yuntan-network
 
-
   nacos:
     image: nacos/nacos-server:v3.1.1
     container_name: nacos
@@ -104,6 +103,32 @@ services:
       timeout: 10s
       retries: 10
       start_period: 60s
+
+  rabbitmq:
+    image: rabbitmq:4.2.4-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      # 设置默认账号密码，保持和你其他服务一致
+      RABBITMQ_DEFAULT_USER: root
+      RABBITMQ_DEFAULT_PASS: 766498
+      TZ: Asia/Shanghai
+    ports:
+      - "5672:5672"   # AMQP 消息通讯端口
+      - "15672:15672" # Web 管理界面端口 (http://localhost:15672)
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      # 如果后续需要自定义插件配置，可取消注释下方挂载
+      # - ./rabbitmq-conf:/etc/rabbitmq/conf.d
+    networks:
+      - yuntan-network
+    # RabbitMQ 的健康检查
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
 #  blog-user-service:
 #    build:
@@ -240,6 +265,29 @@ services:
     # 注意：这里 -pl 指向 blog-comment-service，debug 端口改为 5007
     command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-comment-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007'"
 
+  blog-notify-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: blog-notify-service
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    networks:
+      - yuntan-network
+    volumes:
+      # 挂载根目录，确保能读取到 blog-common 和父 pom
+      - ./:/app
+      # 挂载 maven 仓库缓存
+      - maven-repo:/root/.m2/repository
+    ports:
+      - "8084:8084"   # 【端口顺延】假设通知服务运行在 8084
+      - "35732:35732" # 【LiveReload顺延】
+      - "5008:5008"   # 【Debug端口顺延】配合下方 command 中的 address=*:5008 使用
+    # 【核心修改】：先 install 安装依赖，再单独 run 服务
+    # 注意：这里 -pl 指向 blog-notify-service，debug 端口改为 5008
+    command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-notify-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008'"
 
 networks:
   yuntan-network:
@@ -260,3 +308,4 @@ volumes:
   blog-gateway-logs:
   maven-repo: # 持久化 Maven 依赖包
   mongo-data:
+  rabbitmq-data:
