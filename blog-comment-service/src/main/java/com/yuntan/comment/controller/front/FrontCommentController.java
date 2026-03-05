@@ -14,8 +14,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/front/comments")
-@Slf4j
-@RequiredArgsConstructor
+@Slf4j  // 启用日志记录
+@RequiredArgsConstructor  // 生成包含所有 final 字段的构造器，简化依赖注入
 @Tag(name = "前台-评论接口")
 public class FrontCommentController {
 

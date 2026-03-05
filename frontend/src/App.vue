@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import Header from '@/components/layout/Header.vue'
-import Footer from '@/components/layout/Footer.vue'
+import Header from '@/layouts/Header.vue'
+import Footer from '@/layouts/Footer.vue'
 import LoadingPulse from '@/components/loaders/LoadingPulse.vue'
-import NotificationsContainer from '@/components/layout/NotificationsContainer.vue'
+import NotificationsContainer from '@/layouts/NotificationsContainer.vue'
 import PortalButton from '@/components/common/PortalButton.vue'
 
 const route = useRoute()

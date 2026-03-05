@@ -32,6 +32,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/LoginView.vue')
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPasswordView',
+    component: () => import('@/views/ForgotPasswordView.vue')
+  },
+  {
     path: '/register',
     name: 'RegisterView',
     component: () => import('@/views/RegisterView.vue')
@@ -64,6 +69,7 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/admin/dashboard',
     children: [
       { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/views/admin/Dashboard.vue') },
+    { path: 'stats', name: 'AdminStats', component: () => import('@/views/admin/Stats.vue') },
       { path: 'articles', name: 'AdminArticles', component: () => import('@/views/admin/Articles.vue') },
       { path: 'categories', name: 'AdminCategories', component: () => import('@/views/admin/Categories.vue') },
       { path: 'tag', name: 'AdminTag', component: () => import('@/views/admin/Tags.vue') },

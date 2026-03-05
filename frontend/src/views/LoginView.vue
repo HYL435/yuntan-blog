@@ -135,7 +135,7 @@ onUnmounted(() => {
           </label>
           <span class="checkbox-text">记住我</span>
         </div>
-        <span class="span">忘记密码？</span>
+        <RouterLink to="/forgot-password" class="span text-blue-500 hover:underline">忘记密码？</RouterLink>
       </div>
       
       <button class="button-submit" type="submit" :disabled="isLoading">{{ isLoading ? '登录中...' : '登录' }}</button>

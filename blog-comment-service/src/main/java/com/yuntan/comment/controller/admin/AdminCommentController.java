@@ -1,14 +1,21 @@
 package com.yuntan.comment.controller.admin;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yuntan.comment.domain.dto.admin.CommentStatusDTO;
+import com.yuntan.comment.domain.po.Comment;
+import com.yuntan.comment.domain.vo.admin.CommentAdminVO;
 import com.yuntan.comment.service.ICommentService;
+import com.yuntan.common.domain.PageDTO;
+import com.yuntan.common.domain.PageQuery;
 import com.yuntan.common.domain.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.hibernate.validator.constraints.UUID;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -28,6 +35,29 @@ public class AdminCommentController  {
         commentService.removeById(id);
 
         return Result.ok();
+    }
+
+    @GetMapping
+    @Operation(summary = "获取评论列表")
+    public Result<List<CommentAdminVO>> listCommentsAdmin(PageQuery pageQuery) {
+
+        log.info("获取评论列表，分页参数：{}", pageQuery);
+
+        Page<Comment> list = commentService.listCommentsAdmin(pageQuery);
+
+        return Result.ok(PageDTO.of(list, CommentAdminVO.class).getList());
+    }
+
+    @PutMapping("/status")
+    @Operation(summary = "修改评论状态")
+    public Result<Void> updateCommentStatus(@RequestBody CommentStatusDTO commentStatusDTO) {
+
+        log.info("修改评论状态，评论ID：{}，新状态：{}", commentStatusDTO.getId(), commentStatusDTO.getStatus());
+
+        commentService.updateStatusById(commentStatusDTO);
+
+        return Result.ok();
+
     }
 
 }

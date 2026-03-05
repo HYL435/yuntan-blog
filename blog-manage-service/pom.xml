@@ -10,9 +10,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blog-article-service</artifactId>
-    <name>blog-article-service</name>
-    <description>文章服务模块</description>
+    <artifactId>blog-manage-service</artifactId>
+    <name>blog-manage-service</name>
+    <description>管理服务模块</description>
 
     <properties>
         <java.version>21</java.version>
@@ -132,16 +132,16 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
         </dependency>
-        <!-- Spring Boot Starter Data MongoDB -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-mongodb</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.yuntan</groupId>
             <artifactId>blog-api</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
+        </dependency>
+        <!--        rabbitmq 依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
     </dependencies>
 

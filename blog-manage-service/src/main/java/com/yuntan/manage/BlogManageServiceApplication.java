@@ -1,17 +1,15 @@
-package com.yuntan.notify;
+package com.yuntan.manage;
 
 import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = "com.yuntan")
-@MapperScan("com.yuntan.notify.mapper")
-@EnableRabbit
-public class BlogNotifyServiceApplication {
+@MapperScan("com.yuntan.manage.mapper")
+public class BlogManageServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(BlogNotifyServiceApplication.class, args);
+        SpringApplication.run(BlogManageServiceApplication.class, args);
     }
 
 }

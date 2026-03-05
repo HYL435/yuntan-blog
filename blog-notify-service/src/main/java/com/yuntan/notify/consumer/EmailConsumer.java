@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EmailConsumer {
 
-    public final JavaMailSender mailSender; // Spring Boot 自动注入的发送器
+    private final JavaMailSender mailSender; // Spring Boot 自动注入的发送器
 
     @Value("${spring.mail.username}") // 获取发件人账号
     private String from;
@@ -25,7 +25,12 @@ public class EmailConsumer {
      */
     @RabbitListener(queues = MqConstants.EMAIL_QUEUE)
     public void processEmail(EmailMsgDTO msg) {
-        log.info("收到邮件发送请求：{}", msg);
+
+        if (mailSender == null) {
+            log.error("JavaMailSender 注入失败！");
+        } else {
+            log.info("收到邮件发送请求：{}", msg);
+        }
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();

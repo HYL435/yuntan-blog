@@ -2,11 +2,13 @@ package com.yuntan.comment.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuntan.api.client.AmapFeignClient;
 import com.yuntan.api.client.UserClient;
 import com.yuntan.api.dto.AmapIpResponseDTO;
 import com.yuntan.api.dto.UserCommentDTO;
+import com.yuntan.comment.domain.dto.admin.CommentStatusDTO;
 import com.yuntan.comment.domain.dto.front.CommentDTO;
 import com.yuntan.comment.domain.po.Comment;
 import com.yuntan.comment.domain.vo.front.CommentChildVO;
@@ -16,6 +18,7 @@ import com.yuntan.comment.service.ICommentService;
 import com.yuntan.comment.utils.CommentOssUtil;
 import com.yuntan.common.constant.MessageConstant;
 import com.yuntan.common.context.BaseContext;
+import com.yuntan.common.domain.PageQuery;
 import com.yuntan.common.domain.Result;
 import com.yuntan.common.exception.BusinessException;
 import com.yuntan.common.utils.BeanUtils;
@@ -232,6 +235,31 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public Integer countComments(Long articleId) {
 
         return commentMapper.countComments(articleId);
+    }
+
+    /**
+     * 后台分页查询评论列表
+     */
+    @Override
+    public Page<Comment> listCommentsAdmin(PageQuery pageQuery) {
+
+        Page<Comment> page = new Page<>(pageQuery.getPageNo(), pageQuery.getPageSize());
+
+        LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(Comment::getUpdateTime);
+
+        return commentMapper.selectPage(page, wrapper);
+    }
+
+    /**
+     * 修改评论状态
+     */
+    @Override
+    public void updateStatusById(CommentStatusDTO commentStatusDTO) {
+
+        Comment comment = BeanUtils.copyBean(commentStatusDTO, Comment.class);
+
+        commentMapper.updateById(comment);
     }
 
     // 抽取一个填充用户信息的小方法，避免重复代码

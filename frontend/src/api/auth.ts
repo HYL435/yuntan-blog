@@ -136,3 +136,26 @@ export const updateUserProfileApi = (params: UpdateUserRequest | FormData) => {
 export const logoutApi = () => {
   return http.post<{ code: number; message: string }>('/front/users/logout', {});
 };
+
+/**
+ * 忘记密码：请求发送重置密码邮件或验证码
+ */
+export const forgotPasswordApi = (email: string) => {
+  return http.post<{ code: number; message: string }>('/front/users/forgot', { email });
+};
+
+/**
+ * 发送重置验证码到邮箱（6位验证码）
+ */
+export const sendResetCodeApi = (email: string) => {
+  // 后端接口为 @PostMapping("/emailCode") 并使用 @RequestParam String email
+  // 通过 params 将 email 附加到查询字符串，避免使用 JSON body（@RequestParam 更稳定）
+  return http.post<{ code: number; message: string }>('/front/users/emailCode', null, { params: { email } });
+};
+
+/**
+ * 使用验证码重置密码
+ */
+export const resetPasswordApi = (params: { email: string; code: string; newPassword: string }) => {
+  return http.post<{ code: number; message: string }>('/front/users/forgot/reset', params);
+};

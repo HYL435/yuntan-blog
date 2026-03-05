@@ -29,6 +29,10 @@
             <el-icon><Odometer /></el-icon>
             <template #title>仪表盘</template>
           </el-menu-item>
+          <el-menu-item index="/admin/stats">
+            <el-icon><DataAnalysis /></el-icon>
+            <template #title>统计</template>
+          </el-menu-item>
           <el-sub-menu index="content">
             <template #title>
               <el-icon><Document /></el-icon>
@@ -108,7 +112,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
-  Management, Expand, Fold, HomeFilled, Odometer, Document, ChatLineRound, User, Setting, Sunny, Moon
+  Management, Expand, Fold, HomeFilled, Odometer, Document, ChatLineRound, User, Setting, Sunny, Moon, DataAnalysis
 } from '@element-plus/icons-vue'
 
 const isCollapse = ref(false)
@@ -127,6 +131,7 @@ const breadcrumbName = computed(() => {
     '/admin/tag': '标签管理',
     '/admin/comment': '评论管理',
     '/admin/guestbook': '留言管理',
+    '/admin/stats': '统计',
     '/admin/users': '用户管理',
     '/admin/settings': '系统设置'
   }

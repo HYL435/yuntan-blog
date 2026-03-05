@@ -16,7 +16,7 @@ import java.util.List;
  * 评论实体类
  */
 @Data
-@AllArgsConstructor
+@AllArgsConstructor // 生成全参构造器
 @NoArgsConstructor
 @Builder
 @Schema(description = "评论实体")

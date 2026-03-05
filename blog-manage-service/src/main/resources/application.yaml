@@ -1,8 +1,8 @@
 server:
-  port: 8084
+  port: 8085
 spring:
   application:
-    name: blog-notify-service
+    name: blog-manage-service
   profiles:
     active: local  # 激活的配置文件
   mvc:
@@ -19,6 +19,7 @@ spring:
       - optional:nacos:shared-swagger.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:shared-redis.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:shared-mybatis-plus.yaml?group=DEFAULT_GROUP&refresh=true
+      - optional:nacos:shared-oss.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:shared-mail.yaml?group=DEFAULT_GROUP&refresh=true
       - optional:nacos:shared-rabbitmq.yaml?group=DEFAULT_GROUP&refresh=true
   cloud:
@@ -38,20 +39,16 @@ spring:
       server-addr: nacos:8848
       username: nacos
       password: 766498
-  mail:
-    # 加这行是为了骗过 IDEA/Spring，让它觉得由配置，从而创建 Bean
-    # 真正运行时，Nacos 的配置会覆盖这里
-    host: smtp.qq.com
 api:
   info:
-    title: 云坛博客通知服务API
-    description: "云坛博客通知服务API接口文档"
+    title: 云坛博客管理服务API
+    description: "云坛博客管理服务API接口文档"
     version: v1.0.0
     contact-name: 苜玥
     contact-email: 2929028544@qq.com
     contact-url: https://www.yuntan.com
   packages-to-scan:
-    front: com.yuntan.notify.controller.front
-    admin: com.yuntan.notify.controller.admin
+    front: com.yuntan.manage.controller.front
+    admin: com.yuntan.manage.controller.admin
 
 

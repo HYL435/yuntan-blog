@@ -5,6 +5,7 @@ import com.alibaba.nacos.shaded.io.grpc.netty.shaded.io.netty.util.internal.Thre
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yuntan.api.dto.ArticleInfoDTO;
 import com.yuntan.article.constant.QueryType;
 import com.yuntan.article.constant.RedisConstant;
 import com.yuntan.article.domain.doc.ArticleContentDoc;
@@ -548,6 +549,18 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         // 删除缓存
         redisTemplate.delete(key);
+    }
+
+    /**
+     * 根据文章ID获取文章信息
+     */
+    @Override
+    public ArticleInfoDTO getArticleInfoById(Long id) {
+        Article article = this.getById(id);
+        if (article == null) {
+            throw new RuntimeException(MessageConstant.ARTICLE_NOT_FOUND);
+        }
+        return BeanUtils.copyBean(article, ArticleInfoDTO.class);
     }
 
     // 获取并设置文章分类和标签

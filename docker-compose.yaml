@@ -289,6 +289,30 @@ services:
     # 注意：这里 -pl 指向 blog-notify-service，debug 端口改为 5008
     command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-notify-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008'"
 
+  blog-manage-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    container_name: blog-manage-service
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    networks:
+      - yuntan-network
+    volumes:
+      # 挂载根目录，确保能读取到 blog-common 和父 pom
+      - ./:/app
+      # 挂载 maven 仓库缓存
+      - maven-repo:/root/.m2/repository
+    ports:
+      - "8085:8085"   # 假设 blog-manage-service 运行在 8085 端口
+      - "35733:35733" # LiveReload端口
+      - "5009:5009"   # Debug端口，配合 jvmArguments 使用
+    # 【核心修改】：先 install 安装依赖，再单独 run 服务
+    # 注意：这里 -pl 指向 blog-manage-service，debug 端口改为 5009
+    command: /bin/sh -c "mvn install -DskipTests && mvn spring-boot:run -pl blog-manage-service -Dspring-boot.run.jvmArguments='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5009'"
+
 networks:
   yuntan-network:
     driver: bridge

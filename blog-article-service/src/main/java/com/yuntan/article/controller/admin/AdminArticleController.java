@@ -1,5 +1,6 @@
 package com.yuntan.article.controller.admin;
 
+import com.yuntan.api.dto.ArticleInfoDTO;
 import com.yuntan.article.domain.dto.admin.ArticleSaveDTO;
 import com.yuntan.article.domain.dto.admin.ArticleStatusDTO;
 import com.yuntan.article.domain.query.ArticleManageQuery;
@@ -89,6 +90,16 @@ public class AdminArticleController {
         articleService.updateArticleStatus(articleStatusDTO);
 
         return Result.ok();
+    }
+
+    @GetMapping("/info/{id}")
+    @Operation(summary = "获取文章信息")
+    public Result<ArticleInfoDTO> getArticleInfoById(@PathVariable Long id) {
+        log.info("获取文章信息，文章ID：{}", id);
+
+        ArticleInfoDTO articleInfoDTO = articleService.getArticleInfoById(id);
+
+        return Result.ok(articleInfoDTO);
     }
 
 }

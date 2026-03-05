@@ -1,7 +1,7 @@
 <script setup lang="ts" name="HomeView">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import Header from '@/components/layout/Header.vue';
+import Header from '@/layouts/Header.vue';
 import GridBackground from '@/components/background/GridBackground.vue';
 import Rain from '@/components/background/Rain.vue';
 import ArticleCard from '@/components/cards/ArticleCard.vue';
@@ -253,6 +253,7 @@ onUnmounted(() => {
                             :heat="Number(article.viewCount)"
                             :comments="Number(article.commentCount)"
                             :likes="Number(article.likeCount)"
+                            :collectCount="Number(article.collectCount)"
                             :excerpt="article.summary"
                             :primaryTag="article.category || cat.categoryName"
                             :secondaryTag="article.tags && article.tags.length ? article.tags[0] : ''"

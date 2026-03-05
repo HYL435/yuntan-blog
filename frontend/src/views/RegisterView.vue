@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { validateRegisterUser } from '@/utils/validators';
-import { registerApi, loginApi } from '@/api/auth';
+import { registerApi } from '@/api/auth';
 import { useUserStore } from '@/stores/user';
 import BackHomeButton from '@/components/common/BackHomeButton.vue';
 import { useNotification } from '@/composables/useNotification';
@@ -41,40 +41,26 @@ const handleSubmit = async () => {
     });
 
     if (registerResponse.data.code === 200) {
-      // 注册成功，立即登录
+      // 注册成功，使用 store 的 login 方法完成登录流程并渲染用户数据
       try {
-        const loginResponse = await loginApi({
-          email: email.value,
-          password: password.value
-        });
-
-        if (loginResponse.data.code === 200) {
-          // 保存登录信息
-          await userStore.login(loginResponse.data.data);
-          success('注册成功，即将跳转！');
+        const loginResult = await userStore.login({ email: email.value, password: password.value });
+        if (loginResult.success) {
+          success('注册并登录成功，即将跳转！');
           // 清空表单
           nickname.value = '';
           email.value = '';
           password.value = '';
-          // 立即跳转到首页
-          setTimeout(() => {
-            router.push('/');
-          }, 500);
+          setTimeout(() => router.push('/'), 500);
         } else {
-          errorMessage.value = '登录失败，请手动登录。';
+          errorMessage.value = loginResult.message || '自动登录失败，请手动登录。';
           warning('注册成功，请手动登录');
-          setTimeout(() => {
-            router.push('/login');
-          }, 2000);
+          setTimeout(() => router.push('/login'), 2000);
         }
       } catch (loginError: any) {
         console.error('自动登录失败:', loginError);
         errorMessage.value = '注册成功，请手动登录。';
         warning('注册成功，请手动登录');
-        // 跳转到登录页，用户可以手动登录
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+        setTimeout(() => router.push('/login'), 2000);
       }
     } else {
       errorMessage.value = registerResponse.data.message || '注册失败，请重试。';
