@@ -352,6 +352,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         // 获取并设置分类和标签
         articleAdminVOPageDTO.getList().forEach(this::setCategoryAndTags);
 
+        // 额外的过滤：如果前端传了 category 字段，则在内存中过滤一次（因为管理列表的查询条件比较复杂，直接在SQL里加分类条件会很麻烦）
         if (query.getCategory() != null) {
             List<ArticleAdminVO> list = articleAdminVOPageDTO.getList()
                     .stream()

@@ -1,5 +1,5 @@
 <script setup lang="ts" name="HomeView">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '@/layouts/Header.vue';
 import GridBackground from '@/components/background/GridBackground.vue';
@@ -12,6 +12,10 @@ import LatestCarousel from '@/components/separate/LatestCarousel.vue';
 import { getCategories, CategoryFrontVO } from '@/api/category';
 import http from '@/api/http';
 import HotTagsSidebar from '@/components/common/HotTagsSidebar.vue';
+import AnnouncementBar from '@/components/common/AnnouncementBar.vue';
+import StatsSidebar from '@/components/common/StatsSidebar.vue';
+import { ElMessage } from 'element-plus'
+import { ArrowRight } from '@element-plus/icons-vue'
 // 标签类型
 interface TagFrontVO {
   id: number;
@@ -20,6 +24,11 @@ interface TagFrontVO {
 }
 
 const tags = ref<TagFrontVO[]>([]);
+
+// 公告栏文本
+const announcementTitle = ref('网站公告')
+const announcementContent = ref('欢迎来到云坛 — 我们已升级界面与评论管理功能，体验更顺畅。')
+const announcementLink = ref('')
 
 const titleScale = ref(1);
 const titleOffset = ref(0);
@@ -43,35 +52,57 @@ const demoArticle = {
 
 const categories = ref<CategoryFrontVO[]>([]);
 const categoryArticles = ref<Record<string, any[]>>({});
+// 分页设置：主页面每个分类每页显示数量
+const PAGE_SIZE = 3
+const categoryPage = reactive<Record<number, number>>({})
+const categoryTotal = reactive<Record<number, number>>({})
+const categoryHasMore = reactive<Record<number, boolean>>({})
+
+const fetchCategoryPage = async (catId: number, pageNo = 1) => {
+  try {
+    const articlesRes = await http.get('/front/articles/page/categoryOrTags', {
+      params: {
+        pageNo,
+        pageSize: PAGE_SIZE,
+        categoryId: catId,
+      },
+    })
+    const body = articlesRes.data || articlesRes
+    const data = body.data || body
+    const records = data.records || data.list || data.rows || (Array.isArray(data) ? data : [])
+    const totalCount = data.total || data.totalCount || (Array.isArray(data) ? data.length : records.length)
+    categoryTotal[catId] = Number(totalCount) || 0
+    categoryHasMore[catId] = pageNo * PAGE_SIZE < (categoryTotal[catId] || records.length)
+    return records
+  } catch (err) {
+    console.error('获取分类文章失败', err)
+    ElMessage.error('加载文章失败')
+    return []
+  }
+}
+
+const loadNext = async (catId: number) => {
+  const nextPage = (categoryPage[catId] || 1) + 1
+  const records = await fetchCategoryPage(catId, nextPage)
+  if (!records || records.length === 0) {
+    ElMessage.info('没有更多文章了')
+    return
+  }
+  categoryPage[catId] = nextPage
+  categoryArticles.value[catId] = records
+}
 
 onMounted(async () => {
-  // 分类及文章
+  // 分类及文章（每页显示 PAGE_SIZE 条）
   const res = await getCategories();
   categories.value = res;
   await Promise.all(
     res.map(async (cat) => {
-      const articlesRes = await http.get('/front/articles/page/categoryOrTags', {
-        params: {
-          pageNo: 1,
-          pageSize: 10,
-          categoryId: cat.id,
-        },
-      });
-      if (articlesRes.data?.data) {
-        if (Array.isArray(articlesRes.data.data.records)) {
-          categoryArticles.value[cat.id] = articlesRes.data.data.records;
-        } else if (Array.isArray(articlesRes.data.data.list)) {
-          categoryArticles.value[cat.id] = articlesRes.data.data.list;
-        } else if (Array.isArray(articlesRes.data.data)) {
-          categoryArticles.value[cat.id] = articlesRes.data.data;
-        } else {
-          categoryArticles.value[cat.id] = [];
-        }
-      } else {
-        categoryArticles.value[cat.id] = [];
-      }
+      categoryPage[cat.id] = 1
+      const records = await fetchCategoryPage(cat.id, 1)
+      categoryArticles.value[cat.id] = records || []
     })
-  );
+  )
 
   // 标签及每个标签的文章总数
   try {
@@ -231,6 +262,7 @@ onUnmounted(() => {
               
               <!-- 第一部分：最新发布 -->
               <section>
+                <AnnouncementBar :title="announcementTitle" :content="announcementContent" :link="announcementLink" :closable="false" class="mb-10" />
                 <LatestCarousel title="推荐文章" />
               </section>
 
@@ -261,6 +293,24 @@ onUnmounted(() => {
                             @click="goToArticle"
                           />
                         </div>
+                      </div>
+                      <div class="flex justify-end mt-2">
+                        <el-button
+                          size="medium"
+                          :disabled="!categoryHasMore[cat.id]"
+                          @click="loadNext(cat.id)"
+                          class="rounded-full px-6 py-2 flex items-center justify-center gap-3 text-base font-medium transition-shadow duration-200"
+                          :style="{
+                            backgroundColor: isDarkMode ? '#1E1E1E' : '#F7F9FE',
+                            border: '1px solid ' + (isDarkMode ? '#2b2b2b' : '#F7F9FE'),
+                            minWidth: '180px',
+                            borderRadius: '9999px'
+                          }"
+                          :class="categoryHasMore[cat.id] ? 'shadow-md hover:shadow-lg' : 'opacity-60 cursor-not-allowed'"
+                        >
+                          <span>下一页</span>
+                          <el-icon><ArrowRight /></el-icon>
+                        </el-button>
                       </div>
                     </div>
                   </div>
@@ -302,6 +352,7 @@ onUnmounted(() => {
                     </template>
                   </div>
                 </div>
+                <StatsSidebar />
               </div>
             </div>
 

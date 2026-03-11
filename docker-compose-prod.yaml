@@ -1,0 +1,206 @@
+# 定义全局日志策略 (防止日志写满磁盘)
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "3"
+
+services:
+  # ================= 基础设施 =================
+  mysql:
+    image: mysql:8.0.36
+    container_name: prod-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 766498
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: nacos_config
+      MYSQL_INITDB_SKIP_TZINFO: "1"
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+      - ./conf:/etc/mysql/conf.d
+    networks:
+      - yuntan-network
+    logging: *default-logging
+    command: --default-authentication-plugin=caching_sha2_password
+
+  redis:
+    image: redis:8.4
+    container_name: prod-redis
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --requirepass 766498 --appendonly yes --bind 0.0.0.0
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  mongo:
+    image: mongo:8.2.4
+    container_name: prod-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 766498
+      TZ: Asia/Shanghai
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    command: ["mongod", "--auth", "--bind_ip", "0.0.0.0", "--port", "27017"]
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  nacos:
+    image: nacos/nacos-server:v3.1.1
+    container_name: prod-nacos
+    restart: always
+    environment:
+      NACOS_MODE: "standalone"
+      TZ: Asia/Shanghai
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_TOKEN: "U2VjcmV0S2V5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5"
+      NACOS_AUTH_IDENTITY_KEY: "nacos"
+      NACOS_AUTH_IDENTITY_VALUE: "nacos"
+      # 🔥 优化后 JVM（低配服务器专用）
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+      JVM_XMN: 128m
+      JVM_XSS: 256k
+    ports:
+      - "8848:8848"
+    volumes:
+      - nacos-logs:/home/nacos/logs
+      - nacos-data:/home/nacos/data
+      - ./nacos-conf/application.properties:/home/nacos/conf/application.properties
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  rabbitmq:
+    image: rabbitmq:4.2.4-management
+    container_name: prod-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: root
+      RABBITMQ_DEFAULT_PASS: 766498
+      TZ: Asia/Shanghai
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  # ================= 微服务应用（已全部优化内存） =================
+  blog-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: blog-gateway
+    container_name: prod-blog-gateway
+    restart: always
+    ports:
+      - "80:9000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      # 🔥 优化后 JVM
+      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  blog-user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: blog-user-service
+    container_name: prod-blog-user-service
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  blog-article-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: blog-article-service
+    container_name: prod-blog-article-service
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  blog-comment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: blog-comment-service
+    container_name: prod-blog-comment-service
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+  blog-notify-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: blog-notify-service
+    container_name: prod-blog-notify-service
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
+networks:
+  yuntan-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  mongo-data:
+  rabbitmq-data:
+  nacos-logs:
+  nacos-data:

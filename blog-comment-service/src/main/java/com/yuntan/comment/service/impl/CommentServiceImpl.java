@@ -5,12 +5,16 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuntan.api.client.AmapFeignClient;
+import com.yuntan.api.client.ArticleClient;
 import com.yuntan.api.client.UserClient;
 import com.yuntan.api.dto.AmapIpResponseDTO;
+import com.yuntan.api.dto.ArticleInfoDTO;
 import com.yuntan.api.dto.UserCommentDTO;
 import com.yuntan.comment.domain.dto.admin.CommentStatusDTO;
 import com.yuntan.comment.domain.dto.front.CommentDTO;
 import com.yuntan.comment.domain.po.Comment;
+import com.yuntan.comment.domain.query.CommentQuery;
+import com.yuntan.comment.domain.vo.admin.CommentAdminVO;
 import com.yuntan.comment.domain.vo.front.CommentChildVO;
 import com.yuntan.comment.domain.vo.front.CommentVO;
 import com.yuntan.comment.mapper.CommentMapper;
@@ -18,6 +22,7 @@ import com.yuntan.comment.service.ICommentService;
 import com.yuntan.comment.utils.CommentOssUtil;
 import com.yuntan.common.constant.MessageConstant;
 import com.yuntan.common.context.BaseContext;
+import com.yuntan.common.domain.PageDTO;
 import com.yuntan.common.domain.PageQuery;
 import com.yuntan.common.domain.Result;
 import com.yuntan.common.exception.BusinessException;
@@ -26,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.*;
@@ -43,6 +47,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     public final UserClient userClient;
     public final AmapFeignClient amapFeignClient;
+    public final ArticleClient articleClient;
     // 读取配置文件中的 Key
     @Value("${amap.key}")
     private String amapKey;
@@ -135,23 +140,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         // 定义 Map 存储用户信息：Key=UserId, Value=UserDTO
         Map<Long, UserCommentDTO> userMap = new HashMap<>();
 
-        if (!userIds.isEmpty()) {
-            try {
-                // 远程调用
-                Result<List<UserCommentDTO>> result = userClient.getUserComments(userIds);
-
-                // 【安全】判空处理，防止远程服务挂了导致空指针
-                if (result != null && result.getCode() == 200 && result.getData() != null) {
-                    // 将 List 转为 Map，方便后续快速查找
-                    Map<Long, UserCommentDTO> remoteMap = result.getData().stream()
-                            .collect(Collectors.toMap(UserCommentDTO::getUserId, dto -> dto, (k1, k2) -> k1));
-                    userMap.putAll(remoteMap);
-                }
-            } catch (Exception e) {
-                log.error("远程获取评论用户信息失败，文章ID: {}", articleId, e);
-                // 捕获异常不抛出，保证评论能正常展示（只是没头像而已）
-            }
-        }
+        // 远程调用获取用户信息后，填充 userMap
+        remoteCallUserInfo(userIds, userMap);
 
         // ==========================================
         // 第五步：组装数据 (Entity -> VO)
@@ -241,14 +231,90 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * 后台分页查询评论列表
      */
     @Override
-    public Page<Comment> listCommentsAdmin(PageQuery pageQuery) {
+    public PageDTO<CommentAdminVO> listCommentsAdmin(CommentQuery pageQuery) {
 
-        Page<Comment> page = new Page<>(pageQuery.getPageNo(), pageQuery.getPageSize());
+        // 获取page对象
+        Page<Comment> mpPage = pageQuery.toMpPage();
 
-        LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByDesc(Comment::getUpdateTime);
+        // 设置查询条件
+        LambdaQueryChainWrapper<Comment> queryWrapper = new LambdaQueryChainWrapper<>(commentMapper)
+                .orderByDesc(Comment::getCreateTime);
 
-        return commentMapper.selectPage(page, wrapper);
+        // 执行分页查询
+        Page<Comment> commentPage = queryWrapper.page(mpPage);
+
+        // 转换为VO对象
+        PageDTO<CommentAdminVO> commentAdminVOPageDTO = PageDTO.of(commentPage, CommentAdminVO.class);
+
+        // 获取用户ID列表
+        Set<Long> userIds = commentAdminVOPageDTO
+                .getList()
+                .stream()
+                .map(CommentAdminVO::getUserId)
+                .collect(Collectors.toSet());
+
+        Map<Long, UserCommentDTO> userMap = new HashMap<>();
+
+        // 远程调用获取用户信息后，填充 userMap
+        remoteCallUserInfo(userIds, userMap);
+
+        // 填充VO对象的用户信息
+        commentAdminVOPageDTO.getList().forEach(vo -> fillUserInfo(vo, userMap));
+
+        // 远程调用 Article 服务获取文章标题后，填充VO对象
+        commentAdminVOPageDTO.getList().forEach(vo -> {
+            try {
+                Result<ArticleInfoDTO> result = articleClient.getArticleInfoById(vo.getArticleId());
+                if (result != null && result.getCode() == 200 && result.getData() != null) {
+                    vo.setTitle(result.getData().getTitle());
+                }
+            } catch (Exception e) {
+                log.error("远程获取文章信息失败", e);
+                // 捕获异常不抛出，保证评论能正常展示（只是没标题而已）
+            }
+        });
+
+        // 根据查询条件过滤（如果有）
+        // 这里可以根据 pageQuery 中的其他字段进行过滤，比如状态、时间范围
+        // 例如：
+        if (pageQuery.getStatus() != null) {
+            commentAdminVOPageDTO.setList(commentAdminVOPageDTO.getList().stream()
+                    .filter(vo -> vo.getStatus().equals(pageQuery.getStatus()))
+                    .collect(Collectors.toList()));
+        }
+        if (pageQuery.getTitle() != null) {
+            commentAdminVOPageDTO.setList(commentAdminVOPageDTO.getList().stream()
+                    .filter(vo -> vo.getTitle() != null && vo.getTitle().contains(pageQuery.getTitle()))
+                    .collect(Collectors.toList()));
+        }
+        if (pageQuery.getNickname() != null) {
+            commentAdminVOPageDTO.setList(commentAdminVOPageDTO.getList().stream()
+                    .filter(vo -> vo.getNickname() != null && vo.getNickname().contains(pageQuery.getNickname()))
+                    .collect(Collectors.toList()));
+        }
+
+        return commentAdminVOPageDTO;
+    }
+
+    // 远程调用获取用户信息后，填充VO对象
+    public void remoteCallUserInfo(Set<Long> userIds, Map<Long, UserCommentDTO> userMap) {
+        if (!userIds.isEmpty()) {
+            try {
+                // 远程调用
+                Result<List<UserCommentDTO>> result = userClient.getUserComments(userIds);
+
+                // 【安全】判空处理，防止远程服务挂了导致空指针
+                if (result != null && result.getCode() == 200 && result.getData() != null) {
+                    // 将 List 转为 Map，方便后续快速查找
+                    Map<Long, UserCommentDTO> remoteMap = result.getData().stream()
+                            .collect(Collectors.toMap(UserCommentDTO::getUserId, dto -> dto, (k1, k2) -> k1));
+                    userMap.putAll(remoteMap);
+                }
+            } catch (Exception e) {
+                log.error("远程获取评论用户信息失败", e);
+                // 捕获异常不抛出，保证评论能正常展示（只是没头像而已）
+            }
+        }
     }
 
     /**
@@ -284,6 +350,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             // 如果有回复目标
             // UserCommentDTO toUser = userMap.get(c.getToUserId());
             // ...
+        } else  if (vo instanceof CommentAdminVO) {
+            CommentAdminVO c = (CommentAdminVO) vo;
+            UserCommentDTO u = userMap.get(c.getUserId());
+            if (u != null) {
+                c.setNickname(u.getNickname());
+            }
         }
     }
 

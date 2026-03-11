@@ -71,6 +71,7 @@ const routes: Array<RouteRecordRaw> = [
       { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/views/admin/Dashboard.vue') },
     { path: 'stats', name: 'AdminStats', component: () => import('@/views/admin/Stats.vue') },
       { path: 'articles', name: 'AdminArticles', component: () => import('@/views/admin/Articles.vue') },
+      { path: 'comment', name: 'AdminComments', component: () => import('@/views/admin/Comments.vue') },
       { path: 'categories', name: 'AdminCategories', component: () => import('@/views/admin/Categories.vue') },
       { path: 'tag', name: 'AdminTag', component: () => import('@/views/admin/Tags.vue') },
       { path: 'articles/edit', name: 'AdminArticleEdit', component: () => import('@/views/admin/ArticleEditView.vue') },

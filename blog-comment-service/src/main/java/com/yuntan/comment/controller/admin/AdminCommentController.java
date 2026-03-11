@@ -3,6 +3,7 @@ package com.yuntan.comment.controller.admin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuntan.comment.domain.dto.admin.CommentStatusDTO;
 import com.yuntan.comment.domain.po.Comment;
+import com.yuntan.comment.domain.query.CommentQuery;
 import com.yuntan.comment.domain.vo.admin.CommentAdminVO;
 import com.yuntan.comment.service.ICommentService;
 import com.yuntan.common.domain.PageDTO;
@@ -39,13 +40,13 @@ public class AdminCommentController  {
 
     @GetMapping
     @Operation(summary = "获取评论列表")
-    public Result<List<CommentAdminVO>> listCommentsAdmin(PageQuery pageQuery) {
+    public Result<PageDTO<CommentAdminVO>> listCommentsAdmin(CommentQuery pageQuery) {
 
         log.info("获取评论列表，分页参数：{}", pageQuery);
 
-        Page<Comment> list = commentService.listCommentsAdmin(pageQuery);
+        PageDTO<CommentAdminVO> list = commentService.listCommentsAdmin(pageQuery);
 
-        return Result.ok(PageDTO.of(list, CommentAdminVO.class).getList());
+        return Result.ok(list);
     }
 
     @PutMapping("/status")

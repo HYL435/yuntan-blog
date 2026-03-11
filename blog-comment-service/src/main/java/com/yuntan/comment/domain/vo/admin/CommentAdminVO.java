@@ -58,22 +58,11 @@ public class CommentAdminVO implements Serializable {
     private Long userId;
 
     /**
-     * 父评论ID（用于嵌套回复，0 表示根评论）
+     * 昵称
      */
-    @Schema(    
-            description = "父评论ID，0 表示根评论",
-            example = "0"
-    )
-    private Long parentId;
+    @Schema(description = "用户昵称", example = "张三")
+    private String nickname;
 
-    /**
-     * 被回复用户ID（仅当 parentId > 0 时有效）
-     */
-    @Schema(
-            description = "被回复用户ID（可选）",
-            example = "3"
-    )
-    private Long toUserId;
 
     /**
      * 评论内容

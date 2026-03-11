@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface ArticleClient {
 
 
+    /**
+     * 根据文章ID获取文章信息
+     */
     @GetMapping("/admin/articles/info/{id}")
     Result<ArticleInfoDTO> getArticleInfoById(@PathVariable Long id);
 
