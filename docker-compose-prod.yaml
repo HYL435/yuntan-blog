@@ -21,7 +21,7 @@ services:
       - "13306:3306"
     volumes:
       - ./init:/docker-entrypoint-initdb.d
-      - mysql-data:/var/lib/mysql
+      - /data/yuntan-blog/mysql:/var/lib/mysql
       - ./conf:/etc/mysql/conf.d
     networks:
       - yuntan-network
@@ -37,7 +37,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - /data/yuntan-blog/redis:/data
     command: redis-server --requirepass 766498 --appendonly yes --bind 0.0.0.0
     networks:
       - yuntan-network
@@ -54,7 +54,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo-data:/data/db
+      - /data/yuntan-blog/mongo:/data/db
       - ./mongo-init:/docker-entrypoint-initdb.d
     command: ["mongod", "--auth", "--bind_ip", "0.0.0.0", "--port", "27017"]
     networks:
@@ -72,7 +72,6 @@ services:
       NACOS_AUTH_TOKEN: "U2VjcmV0S2V5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5"
       NACOS_AUTH_IDENTITY_KEY: "nacos"
       NACOS_AUTH_IDENTITY_VALUE: "nacos"
-      # 🔥 优化后 JVM（低配服务器专用）
       JVM_XMS: 256m
       JVM_XMX: 256m
       JVM_XMN: 128m
@@ -80,9 +79,9 @@ services:
     ports:
       - "8848:8848"
     volumes:
-      - nacos-logs:/home/nacos/logs
-      - nacos-data:/home/nacos/data
-      - ./nacos-conf/application.properties:/home/nacos/conf/application.properties
+      - /data/yuntan-blog/nacos-logs:/home/nacos/logs
+      - /data/yuntan-blog/nacos:/home/nacos/data
+      - /data/yuntan-blog/nacos-conf/application.properties:/home/nacos/conf/application.properties
     networks:
       - yuntan-network
     logging: *default-logging
@@ -99,7 +98,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
+      - /data/yuntan-blog/rabbitmq:/var/lib/rabbitmq
     networks:
       - yuntan-network
     logging: *default-logging
@@ -119,7 +118,6 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
-      # 🔥 优化后 JVM
       - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
     networks:
       - yuntan-network
@@ -196,11 +194,3 @@ services:
 networks:
   yuntan-network:
     driver: bridge
-
-volumes:
-  mysql-data:
-  redis-data:
-  mongo-data:
-  rabbitmq-data:
-  nacos-logs:
-  nacos-data:
