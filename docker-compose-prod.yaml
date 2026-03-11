@@ -62,7 +62,7 @@ services:
     logging: *default-logging
 
   nacos:
-    image: nacos/nacos-server:v3.1.1
+    image: nacos/nacos-server:v2.3.2
     container_name: prod-nacos
     restart: always
     environment:
