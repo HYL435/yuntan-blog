@@ -78,7 +78,7 @@ services:
       JVM_XMS: 256m
       JVM_XMX: 256m
       JVM_XMN: 128m
-      mem_limit: 512m
+      JVM_XSS: 256k
     ports:
       - "8848:8848"
     volumes:
