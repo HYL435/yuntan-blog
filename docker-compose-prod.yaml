@@ -23,10 +23,11 @@ services:
       - ./init:/docker-entrypoint-initdb.d
       - /data/yuntan-blog/mysql:/var/lib/mysql
       - ./conf:/etc/mysql/conf.d
+    command: --default-authentication-plugin=caching_sha2_password
+    mem_limit: 512m
     networks:
       - yuntan-network
     logging: *default-logging
-    command: --default-authentication-plugin=caching_sha2_password
 
   redis:
     image: redis:8.4
@@ -39,6 +40,7 @@ services:
     volumes:
       - /data/yuntan-blog/redis:/data
     command: redis-server --requirepass 766498 --appendonly yes --bind 0.0.0.0
+    mem_limit: 128m
     networks:
       - yuntan-network
     logging: *default-logging
@@ -57,6 +59,7 @@ services:
       - /data/yuntan-blog/mongo:/data/db
       - ./mongo-init:/docker-entrypoint-initdb.d
     command: ["mongod", "--auth", "--bind_ip", "0.0.0.0", "--port", "27017"]
+    mem_limit: 384m
     networks:
       - yuntan-network
     logging: *default-logging
@@ -72,9 +75,9 @@ services:
       NACOS_AUTH_TOKEN: "U2VjcmV0S2V5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5"
       NACOS_AUTH_IDENTITY_KEY: "nacos"
       NACOS_AUTH_IDENTITY_VALUE: "766498"
-      JVM_XMS: 256m
-      JVM_XMX: 256m
-      JVM_XMN: 128m
+      JVM_XMS: 192m
+      JVM_XMX: 192m
+      JVM_XMN: 96m
       JVM_XSS: 256k
     ports:
       - "8848:8848"
@@ -82,6 +85,7 @@ services:
       - /data/yuntan-blog/nacos-logs:/home/nacos/logs
       - /data/yuntan-blog/nacos:/home/nacos/data
       - /data/yuntan-blog/nacos-conf/application.properties:/home/nacos/conf/application.properties
+    mem_limit: 320m
     networks:
       - yuntan-network
     logging: *default-logging
@@ -99,11 +103,12 @@ services:
       - "15672:15672"
     volumes:
       - /data/yuntan-blog/rabbitmq:/var/lib/rabbitmq
+    mem_limit: 256m
     networks:
       - yuntan-network
     logging: *default-logging
 
-  # ================= 微服务应用（已全部优化内存） =================
+  # ================= 微服务应用（低内存优化版） =================
   blog-gateway:
     build:
       context: .
@@ -118,7 +123,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
-      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+      - JAVA_OPTS=-Xms96m -Xmx160m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
+    mem_limit: 256m
     networks:
       - yuntan-network
     logging: *default-logging
@@ -135,7 +141,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
-      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+      - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
+    mem_limit: 220m
     networks:
       - yuntan-network
     logging: *default-logging
@@ -152,7 +159,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
-      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+      - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
+    mem_limit: 220m
     networks:
       - yuntan-network
     logging: *default-logging
@@ -169,7 +177,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
-      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+      - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
+    mem_limit: 220m
     networks:
       - yuntan-network
     logging: *default-logging
@@ -186,7 +195,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
-      - JAVA_OPTS=-Xms128m -Xmx192m -XX:+UseG1GC -XX:MaxDirectMemorySize=64m
+      - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
+    mem_limit: 220m
     networks:
       - yuntan-network
     logging: *default-logging
