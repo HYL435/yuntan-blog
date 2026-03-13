@@ -17,7 +17,7 @@
     <properties>
         <java.version>21</java.version>
         <!-- 明确Spring Cloud Alibaba版本（适配Spring Boot 3.5.9） -->
-        <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
+        <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>
         <!-- 明确Spring Cloud版本 -->
         <spring-cloud.version>2024.0.1</spring-cloud.version>
         <!-- MyBatis Plus版本（适配Spring Boot 3.x） -->
