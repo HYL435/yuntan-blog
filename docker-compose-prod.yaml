@@ -108,6 +108,19 @@ services:
       - yuntan-network
     logging: *default-logging
 
+  frontend:
+    image: nginx:alpine
+    container_name: prod-blog-frontend
+    restart: always
+    ports:
+      - "8088:80"
+    volumes:
+      - /opt/yuntan-blog/frontend/dist:/usr/share/nginx/html
+    mem_limit: 64m
+    networks:
+      - yuntan-network
+    logging: *default-logging
+
   # ================= 微服务应用（低内存优化版） =================
   blog-gateway:
     build:
