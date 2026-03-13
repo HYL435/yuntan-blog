@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 // 创建 axios 实例
 // 开发环境将所有请求前缀为 /api（由 Vite 代理转发到后端），生产环境使用绝对 URL
-const baseURL = (import.meta.env.MODE === 'development') ? '/api' : ((import.meta.env as any).VITE_API_URL || 'http://localhost:9000');
+const baseURL = (import.meta.env.MODE === 'development') ? '/api' : ((import.meta.env as any).VITE_API_URL || 'https://yuntan-blog.top');
 
 const http: AxiosInstance = axios.create({
   baseURL,

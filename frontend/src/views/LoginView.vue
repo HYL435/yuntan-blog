@@ -67,7 +67,6 @@ const togglePasswordVisibility = () => {
 
 // 简单的深色模式同步逻辑
 const syncDarkMode = () => {
-  const isDark = document.documentElement.classList.contains('dark');
   // 这里不需要额外的响应式变量控制样式，完全交给CSS变量处理
 };
 

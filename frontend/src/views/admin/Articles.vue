@@ -235,7 +235,7 @@ const hideContextMenu = () => {
 
 const _docClickHandler = () => hideContextMenu()
 
-const handleRowContextmenu = (row: ArticleAdmin, column: any, event: MouseEvent) => {
+const handleRowContextmenu = (row: ArticleAdmin, _column: any, event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
   contextMenuRow.value = row

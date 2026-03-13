@@ -1,5 +1,5 @@
 <template>
-  <div ref="containerRef" class="p-4 bg-white dark:bg-[#1e293b] rounded-lg shadow-sm transition-colors duration-300 relative">
+  <div class="p-4 bg-white dark:bg-[#1e293b] rounded-lg shadow-sm transition-colors duration-300 relative">
     <!-- 顶部工具栏 -->
     <div class="mb-4 flex justify-between items-center">
       <h2 class="text-xl font-bold text-gray-800 dark:text-white">用户管理</h2>
@@ -85,6 +85,7 @@
         <button class="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#0b1220] rounded text-gray-700 dark:text-gray-200" @click="onContextToggleEnable">
           {{ contextMenuRow?.status === 1 ? '禁用账户' : '启用账户' }}
         </button>
+        <button class="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#0b1220] rounded text-gray-700 dark:text-gray-200" @click="onContextEdit">编辑用户</button>
         <button class="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#0b1220] rounded text-gray-700 dark:text-gray-200" @click="onContextOpenRoleDialog">修改角色</button>
         <button class="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#0b1220] rounded text-red-600" @click="onContextDelete">删除</button>
       </div>
@@ -167,10 +168,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed, nextTick, type CSSProperties } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Plus, Search, Refresh, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import http from '@/api/http'
 
 // --- 状态定义 ---
@@ -203,18 +204,17 @@ const tableData = ref<AdminUser[]>([])
 const total = ref(0)
 
 // 右键菜单状态
-const containerRef = ref<HTMLElement | null>(null)
 const menuRef = ref<HTMLElement | null>(null)
 const contextMenuVisible = ref(false)
 const contextMenuRow = ref<AdminUser | null>(null)
-const contextMenuStyle = reactive({ left: '0px', top: '0px', position: 'fixed' })
+const contextMenuStyle = reactive<CSSProperties>({ left: '0px', top: '0px', position: 'fixed' })
 
 const hideContextMenu = () => {
   contextMenuVisible.value = false
   contextMenuRow.value = null
 }
 
-const handleRowContextmenu = (row: AdminUser, column: any, event: MouseEvent) => {
+const handleRowContextmenu = (row: AdminUser, _column: any, event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
   contextMenuRow.value = row

@@ -23,7 +23,7 @@ const getImageUrl = (imageUrl: string | null | undefined): string | null => {
   }
   
   // 如果是相对路径，拼接后端地址
-  const backendUrl = 'http://localhost:9000'
+  const backendUrl = ((import.meta.env as any).VITE_API_URL || 'https://yuntan-blog.top').replace(/\/$/, '')
   return `${backendUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
 }
 

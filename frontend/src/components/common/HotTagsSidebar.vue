@@ -28,7 +28,7 @@ function handleChange(tag: string) {
 <template>
   <div class="sidebar-padding">
     <div class="radio-container" :style="{ '--total-radio': totalRadio }">
-    <template v-for="(tag, idx) in tags" :key="tag.id">
+    <template v-for="tag in tags" :key="tag.id">
       <input
         :id="'radio-tag-' + tag.id"
         type="radio"

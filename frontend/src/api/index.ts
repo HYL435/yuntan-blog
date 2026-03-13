@@ -1,2 +1,2 @@
 export * from './auth';
-export type { UpdateUserRequest };
+export type { UpdateUserRequest } from './auth';

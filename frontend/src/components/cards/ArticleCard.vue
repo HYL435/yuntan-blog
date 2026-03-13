@@ -1,5 +1,5 @@
 <template>
-  <div class="main" :class="$attrs.class" :style="$attrs.style" @click="handleCardClick">
+  <div class="main" @click="handleCardClick">
     <!-- 顶部卡片区域：封面图 -->
     <!-- 使用可选链和默认图防止 coverImg 为空 -->
     <div class="card" :style="{ backgroundImage: `url(${article.coverImg || defaultCover})` }">
@@ -67,8 +67,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-
 // 1. 定义与 Java VO 对应的接口
 interface ArticleVO {
   id: string | number;

@@ -1,17 +1,15 @@
 <script setup lang="ts" name="HomeView">
-import { ref, onMounted, onUnmounted, reactive, computed } from 'vue';
+import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import Header from '@/layouts/Header.vue';
 import GridBackground from '@/components/background/GridBackground.vue';
 import Rain from '@/components/background/Rain.vue';
-import ArticleCard from '@/components/cards/ArticleCard.vue';
 import BloggerCard from '@/components/cards/BloggerCard.vue';
 import SeparateLine from '@/components/separate/SeparateLine.vue';
 import ArticleTwoCard from '@/components/cards/ArticleTwoCard.vue';
 import LatestCarousel from '@/components/separate/LatestCarousel.vue';
 import { getCategories, CategoryFrontVO } from '@/api/category';
 import http from '@/api/http';
-import HotTagsSidebar from '@/components/common/HotTagsSidebar.vue';
 import AnnouncementBar from '@/components/common/AnnouncementBar.vue';
 import StatsSidebar from '@/components/common/StatsSidebar.vue';
 import { ElMessage } from 'element-plus'
@@ -35,44 +33,34 @@ const titleOffset = ref(0);
 const isDarkMode = ref(false);
 const router = useRouter();
 
-const demoArticle = {
-  id: 'demo-1',
-  title: '探索Vue 3组合式API的艺术',
-  excerpt: 'Vue 3 的 Composition API 为代码组织带来了全新的范式...',
-  coverImg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop',
-  category: '前端技术',
-  tags: ['Vue3', '架构'],
-  isOriginal: 1,
-  isTop: 0,
-  likeCount: 128,
-  commentCount: 24,
-  viewCount: 1024,
-  publishTime: '2026-02-04T10:00:00'
-};
-
 const categories = ref<CategoryFrontVO[]>([]);
 const categoryArticles = ref<Record<string, any[]>>({});
 // 分页设置：主页面每个分类每页显示数量
 const PAGE_SIZE = 3
-const categoryPage = reactive<Record<number, number>>({})
-const categoryTotal = reactive<Record<number, number>>({})
-const categoryHasMore = reactive<Record<number, boolean>>({})
+const categoryPage = reactive<Record<string, number>>({})
+const categoryTotal = reactive<Record<string, number>>({})
+const categoryHasMore = reactive<Record<string, boolean>>({})
 
-const fetchCategoryPage = async (catId: number, pageNo = 1) => {
+const fetchCategoryPage = async (catId: number | string, pageNo = 1) => {
+  const catKey = String(catId)
+  const numericCatId = Number(catId)
+  if (Number.isNaN(numericCatId)) {
+    return []
+  }
   try {
     const articlesRes = await http.get('/front/articles/page/categoryOrTags', {
       params: {
         pageNo,
         pageSize: PAGE_SIZE,
-        categoryId: catId,
+        categoryId: numericCatId,
       },
     })
     const body = articlesRes.data || articlesRes
     const data = body.data || body
     const records = data.records || data.list || data.rows || (Array.isArray(data) ? data : [])
     const totalCount = data.total || data.totalCount || (Array.isArray(data) ? data.length : records.length)
-    categoryTotal[catId] = Number(totalCount) || 0
-    categoryHasMore[catId] = pageNo * PAGE_SIZE < (categoryTotal[catId] || records.length)
+    categoryTotal[catKey] = Number(totalCount) || 0
+    categoryHasMore[catKey] = pageNo * PAGE_SIZE < (categoryTotal[catKey] || records.length)
     return records
   } catch (err) {
     console.error('获取分类文章失败', err)
@@ -81,15 +69,16 @@ const fetchCategoryPage = async (catId: number, pageNo = 1) => {
   }
 }
 
-const loadNext = async (catId: number) => {
-  const nextPage = (categoryPage[catId] || 1) + 1
+const loadNext = async (catId: number | string) => {
+  const catKey = String(catId)
+  const nextPage = (categoryPage[catKey] || 1) + 1
   const records = await fetchCategoryPage(catId, nextPage)
   if (!records || records.length === 0) {
     ElMessage.info('没有更多文章了')
     return
   }
-  categoryPage[catId] = nextPage
-  categoryArticles.value[catId] = records
+  categoryPage[catKey] = nextPage
+  categoryArticles.value[catKey] = records
 }
 
 onMounted(async () => {
@@ -98,9 +87,10 @@ onMounted(async () => {
   categories.value = res;
   await Promise.all(
     res.map(async (cat) => {
-      categoryPage[cat.id] = 1
+      const catKey = String(cat.id)
+      categoryPage[catKey] = 1
       const records = await fetchCategoryPage(cat.id, 1)
-      categoryArticles.value[cat.id] = records || []
+      categoryArticles.value[catKey] = records || []
     })
   )
 

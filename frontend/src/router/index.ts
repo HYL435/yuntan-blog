@@ -87,7 +87,7 @@ const router = createRouter({
 })
 
 // 全局路由守卫：限制 /admin 访问（必须登录且 token 中 role===0 或 1）
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   if (to.path === '/admin') {
     const raw = localStorage.getItem('auth_token') || ''
     if (!raw) {

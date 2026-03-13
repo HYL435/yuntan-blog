@@ -81,7 +81,6 @@ const togglePasswordVisibility = () => {
 
 // 简单的深色模式同步逻辑
 const syncDarkMode = () => {
-  const isDark = document.documentElement.classList.contains('dark');
 };
 
 let observer: MutationObserver | null = null;

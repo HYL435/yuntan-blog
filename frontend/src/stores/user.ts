@@ -180,7 +180,8 @@ export const useUserStore = defineStore('user', () => {
         return { success: false, message: '服务器响应格式错误' };
       }
 
-      const { code, msg, message, data } = response.data;
+      const { code, message, data } = response.data;
+      const msg = (response.data as any).msg as string | undefined;
 
       console.log('updateProfile - 提取的数据:', { code, msg, message, data });
 
