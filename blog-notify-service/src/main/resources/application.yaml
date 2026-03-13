@@ -25,7 +25,6 @@ spring:
     nacos:
       config:
         server-addr: nacos:8848
-        namespace: public
         file-extension: yaml
         group: DEFAULT_GROUP
         refresh: true
