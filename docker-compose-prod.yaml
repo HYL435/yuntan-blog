@@ -113,7 +113,7 @@ services:
     container_name: prod-blog-frontend
     restart: always
     ports:
-      - "8088:80"
+      - "80:80"
     volumes:
       - /opt/yuntan-blog/frontend/dist:/usr/share/nginx/html
     mem_limit: 64m
@@ -131,7 +131,7 @@ services:
     container_name: prod-blog-gateway
     restart: always
     ports:
-      - "80:9000"
+      - "9000:9000"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
