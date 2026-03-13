@@ -142,7 +142,7 @@ services:
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
       - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
-    mem_limit: 220m
+    mem_limit: 300m
     networks:
       - yuntan-network
     logging: *default-logging
