@@ -4,7 +4,7 @@ spring:
   application:
     name: blog-user-service
   profiles:
-    active: local  # 激活的配置文件
+    active: prod  # 激活的配置文件
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
