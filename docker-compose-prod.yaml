@@ -134,8 +134,8 @@ services:
       - "9000:9000"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=prod-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=prod-nacos:8848
       - JAVA_OPTS=-Xms96m -Xmx160m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
     mem_limit: 360m
     networks:
@@ -152,8 +152,8 @@ services:
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=prod-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=prod-nacos:8848
       - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
     mem_limit: 360m
     networks:
@@ -170,8 +170,8 @@ services:
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=prod-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=prod-nacos:8848
       - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
     mem_limit: 384m
     networks:
@@ -188,8 +188,8 @@ services:
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=prod-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=prod-nacos:8848
       - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
     mem_limit: 360m
     networks:
@@ -206,8 +206,8 @@ services:
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=prod-nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=prod-nacos:8848
       - JAVA_OPTS=-Xms64m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=30 -XX:+HeapDumpOnOutOfMemoryError
     mem_limit: 360m
     networks:
