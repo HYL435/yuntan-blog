@@ -1,0 +1,23 @@
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  default-flat-param-object: true
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-swagger-models: true
+    swagger-model-name: 实体类列表
+  openapi:
+    title: ${api.info.title}
+    description: ${api.info.description}
+    version: ${api.info.version}
+    concat:
+      name: ${api.info.contact-name}
+      email: ${api.info.contact-email}
+      url: ${api.info.contact-url}

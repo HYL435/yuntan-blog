@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    url: jdbc:mysql://${yuntan.db.host:127.0.0.1}:${yuntan.db.port:3306}/${yuntan.db.name:yuntan-blog}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: ${yuntan.db.username:root}
+    password: ${yuntan.db.password:766498}
+
+    hikari:
+      minimum-idle: ${yuntan.db.min.idle:5}
+      maximum-pool-size: ${yuntan.db.max.pool_size:20}
+      idle-timeout: ${yuntan.db.idle.timeout:30000}
+      max-lifetime: ${yuntan.db.max.lifetime:1800000}
+      connection-timeout: ${yuntan.db.connection.timeout:30000}

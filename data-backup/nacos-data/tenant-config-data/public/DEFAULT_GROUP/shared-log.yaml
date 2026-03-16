@@ -1,0 +1,15 @@
+logging:
+  level:
+    root: info
+    com.yuntan.user: debug
+    org.springframework: warn
+    org.springframework.jdbc.core.JdbcTemplate: TRACE
+    org.apache.tomcat.jdbc.pool: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{50} - %msg%n"
+
+  file:
+    name: logs/blog-user-service.log
+  max-size: 100MB
+  max-history: 15

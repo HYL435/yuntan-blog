@@ -1,0 +1,38 @@
+spring:
+  rabbitmq:
+    # ⚠️ 关键：在 Docker 网络内部，直接写容器名
+    # 如果你在本地 IDE 运行服务连 Docker，这里改成 localhost
+    host: rabbitmq
+    port: 5672
+    username: root
+    password: "766498" # 建议加引号，避免数字被解析错误
+    virtual-host: /
+    
+    # === 生产者配置 (发送端可靠性) ===
+    # 开启发布确认模式 (Correlated: 异步回调确认)
+    publisher-confirm-type: correlated
+    # 开启消息回退 (当消息无法路由到队列时退回给生产者)
+    publisher-returns: true
+    # 强制将 mandatory 设为 true，配合 publisher-returns 使用
+    template:
+      mandatory: true
+
+    # === 消费者配置 (监听端) ===
+    listener:
+      simple:
+        # 手动签收模式 (推荐)，需代码中调用 channel.basicAck
+        # 如果想偷懒自动签收，改为: auto
+        acknowledge-mode: manual
+        # 每次只预取 1 条消息，处理完再拉取下一条 (防止消息堆积在消费者内存)
+        prefetch: 1
+        # 默认并发消费者数量
+        concurrency: 1
+        # 最大并发消费者数量
+        max-concurrency: 10
+        # 自动重试配置 (可选)
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          max-attempts: 3
+          max-interval: 10000ms
+          multiplier: 1.0

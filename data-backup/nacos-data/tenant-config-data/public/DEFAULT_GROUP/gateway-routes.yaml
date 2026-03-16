@@ -1,0 +1,32 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        # 用户服务路由规则
+        - id: blog-user-service-route
+          # 转发到Nacos中的blog-user-service服务
+          uri: lb://blog-user-service
+          # 多个路径规则
+          predicates:
+            - Path=/front/users/**,/admin/users/**
+          filters:
+            - StripPrefix=0
+
+        # 文章服务路由规则
+        - id: blog-article-service-route
+          # 转发到Nacos中的blog-article-service服务
+          uri: lb://blog-article-service
+          # 多个路径规则
+          predicates:
+            - Path=/front/articles/**,/admin/articles/**
+          filters:
+            - StripPrefix=0
+        # 评论服务路由规则
+        - id: blog-comment-service-route
+          # 转发到Nacos中的blog-article-service服务
+          uri: lb://blog-comment-service
+          # 多个路径规则
+          predicates:
+            - Path=/front/comments/**,/admin/comments/**
+          filters:
+            - StripPrefix=0

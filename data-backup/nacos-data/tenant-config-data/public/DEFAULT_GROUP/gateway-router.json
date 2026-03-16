@@ -1,0 +1,46 @@
+[
+  {
+    "id": "blog-user-service-route",
+    "uri": "lb://blog-user-service",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "_genkey_0": "/front/users/**",
+          "_genkey_1": "/admin/users/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "blog-article-service-route",
+    "uri": "lb://blog-article-service",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "_genkey_0": "/front/articles/**",
+          "_genkey_1": "/admin/articles/**",
+          "_genkey_2": "/front/categories/**",
+          "_genkey_3": "/admin/categories/**",
+          "_genkey_4": "/front/tags/**",
+          "_genkey_5": "/admin/tags/**",
+          "_genkey_6": "/front/interacts/**"
+        }
+      }
+    ]
+  },
+  {
+    "id": "blog-comment-service-route",
+    "uri": "lb://blog-comment-service",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "_genkey_0": "/front/comments/**",
+          "_genkey_1": "/admin/comments/**"
+        }
+      }
+    ]
+  }
+]
